@@ -4,12 +4,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 from bson import ObjectId
-import os, sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from security import pwd_ctx
 
 router = APIRouter(prefix="/api/users", tags=["사용자"])
-DEFAULT_PW = os.getenv("DEFAULT_PASSWORD", "MES@2024")
 
 
 class ActionsSchema(BaseModel):
@@ -21,24 +17,22 @@ class ActionsSchema(BaseModel):
 
 
 class UserCreate(BaseModel):
-    user_id:  str
-    name:     str
-    role:     str = Field(..., pattern="^(ADMIN|USER)$")
-    email:    Optional[str] = ""
-    menus:    List[str] = []
-    actions:  ActionsSchema = ActionsSchema()
-    active:   bool = True
-    password: Optional[str] = None  # 미입력 시 DEFAULT_PASSWORD 사용
+    user_id: str
+    name:    str
+    role:    str = Field(..., pattern="^(ADMIN|USER)$")
+    email:   Optional[str] = ""
+    menus:   List[str] = []
+    actions: ActionsSchema = ActionsSchema()
+    active:  bool = True
 
 
 class UserUpdate(BaseModel):
-    name:     Optional[str] = None
-    role:     Optional[str] = Field(None, pattern="^(ADMIN|USER)$")
-    email:    Optional[str] = None
-    menus:    Optional[List[str]] = None
-    actions:  Optional[ActionsSchema] = None
-    active:   Optional[bool] = None
-    password: Optional[str] = None  # 변경 시에만 입력
+    name:    Optional[str] = None
+    role:    Optional[str] = Field(None, pattern="^(ADMIN|USER)$")
+    email:   Optional[str] = None
+    menus:   Optional[List[str]] = None
+    actions: Optional[ActionsSchema] = None
+    active:  Optional[bool] = None
 
 
 def _serialize(doc: dict) -> dict:
@@ -69,16 +63,14 @@ async def list_users(
 
 @router.post("", status_code=201)
 async def create_user(request: Request, body: UserCreate):
-    db  = request.app.state.db
-    raw = body.model_dump(exclude={"password"})
+    db = request.app.state.db
     doc = {
-        **raw,
-        "actions":       body.actions.model_dump(),
-        "password_hash": pwd_ctx.hash(body.password or DEFAULT_PW),
-        "created_at":    datetime.utcnow(),
-        "updated_at":    datetime.utcnow(),
+        **body.model_dump(),
+        "actions":    body.actions.model_dump(),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
     }
-    result  = await db.users.insert_one(doc)
+    result = await db.users.insert_one(doc)
     created = await db.users.find_one({"_id": result.inserted_id})
     return _serialize(created)
 
@@ -87,7 +79,7 @@ async def create_user(request: Request, body: UserCreate):
 async def update_user(request: Request, doc_id: str, body: UserUpdate):
     db = request.app.state.db
     updates = {}
-    data = body.model_dump(exclude={"password"})
+    data = body.model_dump()
     for k, v in data.items():
         if v is None:
             continue
@@ -95,8 +87,6 @@ async def update_user(request: Request, doc_id: str, body: UserUpdate):
             updates["actions"] = v
         else:
             updates[k] = v
-    if body.password:
-        updates["password_hash"] = pwd_ctx.hash(body.password)
     if not updates:
         raise HTTPException(status_code=400, detail="변경 항목이 없습니다.")
     updates["updated_at"] = datetime.utcnow()
