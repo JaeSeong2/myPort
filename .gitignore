@@ -1,0 +1,29 @@
+# Frontend
+front/node_modules/
+front/dist/
+front/dist-ssr/
+front/.local
+front/.env
+front/.env.local
+front/.env.production
+front/.env.*.local
+
+# Backend
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.venv/
+backend/venv/
+backend/.env
+backend/.env.*
+
+# Root
+.env
+.env.*
+
+# Claude memory / session files
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
