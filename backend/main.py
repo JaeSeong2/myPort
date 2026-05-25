@@ -17,6 +17,7 @@ from routers.bom          import router as bom_router,          ensure_indexes a
 from routers.quality      import router as quality_router,      ensure_indexes as quality_indexes
 from routers.equipment    import router as equipment_router,    ensure_indexes as eq_indexes
 from routers.process_flow import router as process_flow_router, ensure_indexes as flow_indexes
+from routers.lot          import router as lot_router,          ensure_indexes as lot_indexes
 
 load_dotenv()
 
@@ -47,6 +48,7 @@ async def lifespan(app: FastAPI):
     await quality_indexes(app.state.db)
     await eq_indexes(app.state.db)
     await flow_indexes(app.state.db)
+    await lot_indexes(app.state.db)
     yield
     app.state.mongo.close()
 
@@ -105,6 +107,7 @@ app.include_router(bom_router)
 app.include_router(quality_router)
 app.include_router(equipment_router)
 app.include_router(process_flow_router)
+app.include_router(lot_router)
 
 
 @app.get("/api/health")

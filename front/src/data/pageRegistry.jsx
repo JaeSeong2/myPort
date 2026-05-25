@@ -15,6 +15,7 @@ import QaSpc           from '../pages/modules/quality/QaSpcPage'
 import InvStatus       from '../pages/modules/inventory/InvStatusPage'
 import InvInout        from '../pages/modules/inventory/InvInoutPage'
 import ProcFlow        from '../pages/modules/process/ProcFlowPage'
+import LotTracking     from '../pages/modules/lot/LotTrackingPage'
 import SysSettings     from '../pages/modules/settings/SysSettingsPage'
 import UserMgmt        from '../pages/modules/settings/UserMgmtPage'
 import ItemMgmt        from '../pages/modules/master-data/ItemMgmtPage'
@@ -39,6 +40,7 @@ export const pageRegistry = {
   '/main/inventory/status':    InvStatus,
   '/main/inventory/inout':     InvInout,
   '/main/process/flow':        ProcFlow,
+  '/main/lot/tracking':        LotTracking,
   '/main/process/bom':         BomMgmt,
   '/main/settings':            SysSettings,
   '/main/settings/items':      ItemMgmt,

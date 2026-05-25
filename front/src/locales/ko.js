@@ -148,6 +148,18 @@ export default {
   'opt.eq.status.RUNNING': '가동',  'opt.eq.status.IDLE': '대기',
   'opt.eq.status.MAINTENANCE': '정비중', 'opt.eq.status.BREAKDOWN': '고장',
 
+  // LOT 추적
+  'menu.lot.tracking': 'LOT 추적',
+  'lot.title': 'LOT 추적',
+  'lot.status.CREATED':     '생성',
+  'lot.status.IN_PROGRESS': '진행중',
+  'lot.status.COMPLETED':   '완료',
+  'lot.status.ON_HOLD':     '보류',
+  'lot.log.PENDING':        '대기',
+  'lot.log.IN_PROGRESS':    '진행중',
+  'lot.log.COMPLETED':      '완료',
+  'lot.log.SKIPPED':        '생략',
+
   // 공정 흐름
   'flow.title': '공정 흐름',
   'flow.productCode': '제품코드',   'flow.productName': '제품명',

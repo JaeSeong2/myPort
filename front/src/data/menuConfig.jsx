@@ -33,6 +33,7 @@ export const menuConfig = [
       { id: 'prod-status',   labelKey: 'menu.prod.status',   label: '실적 현황',       path: '/main/production/status' },
       { id: 'prod-register', labelKey: 'menu.prod.register', label: '실적 등록',       path: '/main/production/register', wip: true },
       { id: 'prod-report',   labelKey: 'menu.prod.report',   label: '일/월 실적 조회', path: '/main/production/report' },
+      { id: 'lot-tracking',  labelKey: 'menu.lot.tracking',  label: 'LOT 추적',        path: '/main/lot/tracking' },
     ],
   },
   {

@@ -1,6 +1,6 @@
 ﻿// 작업지시 현황 - 2026-05-24
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Play } from 'lucide-react'
 import { useLanguage } from '../../../context/LanguageContext'
 import { useAuth }     from '../../../context/AuthContext'
 import { WO_STATUS_FORM, WO_TYPE_FORM, WO_PRIORITY_FORM } from '../../../constants/workOrder'
@@ -14,6 +14,7 @@ import { exportToExcel, parseExcelFile } from '../../../utils/excel'
 import { API_BASE } from '../../../constants/api'
 
 const API        = `${API_BASE}/api/work-orders`
+const LOT_API    = `${API_BASE}/api/lots`
 const MASTER_API = `${API_BASE}/api/master`
 
 const fmtDate = (d) => {
@@ -77,10 +78,16 @@ export default function StatusPage() {
     { key: 'planned',      label: t('wo.period'),       width: 200,
       render: (r) => `${r.planned_start} ~ ${r.planned_end}` },
     { key: 'assignee',     label: t('wo.assignee'),     width: 90 },
-    ...(actions.edit || actions.delete ? [{
-      key: 'actions', label: '', width: 72,
+    ...(actions.add || actions.edit || actions.delete ? [{
+      key: 'actions', label: '', width: 96,
       render: (r) => (
         <div className="flex gap-1">
+          {actions.add && ['PENDING', 'IN_PROG'].includes(r.status) && (
+            <button onClick={() => handleStartLot(r)} title="착수"
+              className="p-1 rounded text-muted hover-text-accent hover-bg-elevated transition-colors cursor-pointer">
+              <Play size={13} />
+            </button>
+          )}
           {actions.edit && (
             <button onClick={() => openEdit(r)}
               className="p-1 rounded text-muted hover-text-accent hover-bg-elevated transition-colors cursor-pointer">
@@ -215,6 +222,32 @@ export default function StatusPage() {
       setModal(null)
       handleSearch()
     } finally { setSaving(false) }
+  }
+
+  const handleStartLot = async (row) => {
+    if (!confirm(`[${row.order_id}] ${row.product_name} 작업을 착수하시겠습니까?`)) return
+    const lotRes = await fetch(LOT_API, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        order_id:     row.order_id,
+        product_code: row.product_code,
+        product_name: row.product_name,
+        planned_qty:  row.quantity,
+      }),
+    })
+    if (!lotRes.ok) { alert('착수 실패'); return }
+    const lot = await lotRes.json()
+
+    // 작업지시 상태를 진행(IN_PROG)으로 업데이트
+    await fetch(`${API}/${row._id}`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ status: 'IN_PROG' }),
+    })
+
+    alert(`착수 완료\nLOT번호: ${lot.lot_no}`)
+    handleSearch()
   }
 
   const handleDelete = async (row) => {

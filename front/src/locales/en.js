@@ -22,6 +22,12 @@ export default {
   'menu.inv.status': 'Stock Status', 'menu.inv.inout': 'In/Outbound',
   'menu.process': 'Process',
   'menu.proc.flow': 'Process Flow', 'menu.proc.bom': 'BOM',
+  'menu.lot.tracking': 'LOT Tracking',
+  'lot.title': 'LOT Tracking',
+  'lot.status.CREATED': 'Created', 'lot.status.IN_PROGRESS': 'In Progress',
+  'lot.status.COMPLETED': 'Completed', 'lot.status.ON_HOLD': 'On Hold',
+  'lot.log.PENDING': 'Pending', 'lot.log.IN_PROGRESS': 'In Progress',
+  'lot.log.COMPLETED': 'Completed', 'lot.log.SKIPPED': 'Skipped',
   'menu.masterData': 'Master Data',
   'menu.settings': 'Settings', 'menu.master': 'Master Data', 'menu.userMgmt': 'User Permissions',
 
