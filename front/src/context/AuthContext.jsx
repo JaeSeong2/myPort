@@ -6,6 +6,9 @@ const API = `${API_BASE}/api/users`
 
 const FULL_ACTIONS = { add: true, edit: true, delete: true, excel_up: true, excel_down: true }
 
+// 사용자 전환 드롭다운에 표시할 계정 목록 (관리자 + 3명)
+const SWITCHER_IDS = new Set(['admin', 'emp002', 'emp003', 'emp007'])
+
 // DB에 사용자가 없을 때 사용할 기본 관리자
 const DEFAULT_ADMIN = {
   _id: '__admin__',
@@ -29,7 +32,7 @@ export function AuthProvider({ children }) {
     fetch(`${API}?active_only=true`)
       .then(r => r.json())
       .then(json => {
-        const list = json.data ?? []
+        const list = (json.data ?? []).filter(u => SWITCHER_IDS.has(u.user_id))
         if (list.length === 0) return
         setUsers(list)
         // 최초 로드 시 첫 번째 ADMIN 사용자로 자동 설정

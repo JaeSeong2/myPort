@@ -17,22 +17,24 @@ class ActionsSchema(BaseModel):
 
 
 class UserCreate(BaseModel):
-    user_id: str
-    name:    str
-    role:    str = Field(..., pattern="^(ADMIN|USER)$")
-    email:   Optional[str] = ""
-    menus:   List[str] = []
-    actions: ActionsSchema = ActionsSchema()
-    active:  bool = True
+    user_id:     str
+    name:        str
+    role:        str = Field(..., pattern="^(ADMIN|USER)$")
+    email:       Optional[str] = ""
+    worker_code: Optional[str] = ""
+    menus:       List[str] = []
+    actions:     ActionsSchema = ActionsSchema()
+    active:      bool = True
 
 
 class UserUpdate(BaseModel):
-    name:    Optional[str] = None
-    role:    Optional[str] = Field(None, pattern="^(ADMIN|USER)$")
-    email:   Optional[str] = None
-    menus:   Optional[List[str]] = None
-    actions: Optional[ActionsSchema] = None
-    active:  Optional[bool] = None
+    name:        Optional[str] = None
+    role:        Optional[str] = Field(None, pattern="^(ADMIN|USER)$")
+    email:       Optional[str] = None
+    worker_code: Optional[str] = None
+    menus:       Optional[List[str]] = None
+    actions:     Optional[ActionsSchema] = None
+    active:      Optional[bool] = None
 
 
 def _serialize(doc: dict) -> dict:

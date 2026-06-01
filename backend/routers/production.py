@@ -73,6 +73,7 @@ async def list_productions(
     request:      Request,
     order_id:     Optional[str] = Query(None),
     product_code: Optional[str] = Query(None),
+    worker_code:  Optional[str] = Query(None),
     status:       Optional[str] = Query(None),
     start_date:   Optional[str] = Query(None),
     end_date:     Optional[str] = Query(None),
@@ -83,6 +84,8 @@ async def list_productions(
         query["order_id"] = {"$regex": order_id, "$options": "i"}
     if product_code and product_code != "ALL":
         query["product_code"] = product_code
+    if worker_code:
+        query["worker_code"] = worker_code
     if status and status != "ALL":
         query["status"] = status
     if start_date or end_date:
