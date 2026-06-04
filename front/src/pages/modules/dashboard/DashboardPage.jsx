@@ -1,20 +1,22 @@
 // 대시보드 - 2026-05-30
 import {
   Factory, ClipboardList, Package, ShieldCheck,
-  Code2, Database, Layers, GitBranch, Wrench, GitMerge,
+  Code2, Database, Layers, GitBranch, Wrench, GitMerge, Sparkles, Cpu,
 } from 'lucide-react'
 import { useAuth } from '../../../context/AuthContext'
 import DashboardKPI from './DashboardKPI'
 import DashboardWorker from './DashboardWorker'
 
 const TECH_STACK = [
-  { icon: <Code2 size={13} />,    label: 'React 19',         color: '#60a5fa' },
-  { icon: <Code2 size={13} />,    label: 'Vite 6',           color: '#a78bfa' },
-  { icon: <Layers size={13} />,   label: 'FastAPI',          color: '#34d399' },
-  { icon: <Database size={13} />, label: 'MongoDB Atlas',    color: '#4ade80' },
-  { icon: <GitBranch size={13} />,label: 'Motor (async)',    color: '#818cf8' },
-  { icon: <Code2 size={13} />,    label: 'Tailwind CSS',     color: '#38bdf8' },
-  { icon: <Code2 size={13} />,    label: 'Recharts',         color: '#fb923c' },
+  { icon: <Code2 size={13} />,     label: 'React 19',       color: '#60a5fa' },
+  { icon: <Code2 size={13} />,     label: 'Vite 6',         color: '#a78bfa' },
+  { icon: <Layers size={13} />,    label: 'FastAPI',         color: '#34d399' },
+  { icon: <Database size={13} />,  label: 'MongoDB Atlas',   color: '#4ade80' },
+  { icon: <GitBranch size={13} />, label: 'Motor (async)',   color: '#818cf8' },
+  { icon: <Code2 size={13} />,     label: 'Tailwind CSS',    color: '#38bdf8' },
+  { icon: <Code2 size={13} />,     label: 'Recharts',        color: '#fb923c' },
+  { icon: <Sparkles size={13} />,  label: 'Groq API',        color: '#f97316' },
+  { icon: <Cpu size={13} />,       label: 'Llama 3.3 70B',   color: '#e879f9' },
 ]
 
 const FEATURES = [
