@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Group as PanelGroup, Panel, Separator } from 'react-resizable-panels'
-import { X, Columns2, XSquare } from 'lucide-react'
+import { X, Columns2, XSquare, Bookmark } from 'lucide-react'
 import { menuConfig } from '../../data/menuConfig'
 import { pageRegistry } from '../../data/pageRegistry'
 import { usePanelContext } from '../../context/PanelContext'
@@ -19,11 +19,14 @@ export default function PanelArea() {
   const {
     activePanel, setActivePanel,
     splitEnabled, enableSplit,
-    leftTabs,  activeLeftTab,  setActiveLeftTab,  addToLeftPanel,  closeLeftTab,  reorderLeftTabs,
-    rightTabs, activeRightTab, setActiveRightTab, closeRightTab, reorderRightTabs, crossMoveTab, closeSplit,
+    leftTabs,  activeLeftTab,  setActiveLeftTab,  addToLeftPanel,  closeLeftTab,  reorderLeftTabs,  togglePinLeft,
+    rightTabs, activeRightTab, setActiveRightTab, closeRightTab, reorderRightTabs, togglePinRight, crossMoveTab, closeSplit,
     closeAllTabs,
     toast,
   } = usePanelContext()
+
+  // 고정 제외 닫을 탭이 하나라도 있을 때만 '모두 닫기' 노출 - 2026-07-24
+  const hasUnpinned = [...leftTabs, ...rightTabs].some((t) => !t.pinned)
 
   // 두 TabBar 간 드래그 정보 공유
   const sharedDrag = useRef(null)
@@ -65,8 +68,13 @@ export default function PanelArea() {
    * @date 2026-05-23
    */
   const handleCloseAll = () => {
+    // 고정 탭은 유지 → 현재 활성이 고정이면 그대로, 아니면 첫 고정 탭(없으면 대시보드)으로 이동 - 2026-07-24
+    const leftPinned = leftTabs.filter((t) => t.pinned)
+    const target = leftPinned.some((t) => t.path === activeLeftTab)
+      ? activeLeftTab
+      : (leftPinned[0]?.path ?? '/main/dashboard')
     closeAllTabs()
-    navigate('/main/dashboard')
+    navigate(target)
   }
 
   const handleCrossMove = (fromSide, path, label, toIdx) => {
@@ -115,8 +123,9 @@ export default function PanelArea() {
                 onTabClick={handleLeftTabClick}
                 onTabClose={handleCloseLeftTab}
                 onReorder={reorderLeftTabs}
+                onTogglePin={togglePinLeft}
                 onCrossMove={handleCrossMove}
-                onCloseAll={leftTabs.length + rightTabs.length > 0 ? handleCloseAll : undefined}
+                onCloseAll={hasUnpinned ? handleCloseAll : undefined}
               />
               <div className="flex-1 overflow-auto bg-base">
                 <PageContent path={activeLeftTab} />
@@ -125,7 +134,7 @@ export default function PanelArea() {
           </Panel>
 
           <Separator
-            style={{ width: '1px', backgroundColor: 'var(--border)', cursor: 'col-resize', flexShrink: 0 }}
+            style={{ width: '4px', backgroundColor: 'var(--text-muted)', cursor: 'col-resize', flexShrink: 0 }}
           />
 
           <Panel defaultSize={50} minSize={20}>
@@ -139,6 +148,7 @@ export default function PanelArea() {
                 onTabClick={(path) => { setActiveRightTab(path); setActivePanel('right') }}
                 onTabClose={closeRightTab}
                 onReorder={reorderRightTabs}
+                onTogglePin={togglePinRight}
                 onCrossMove={handleCrossMove}
                 onClose={closeSplit}
               />
@@ -159,9 +169,10 @@ export default function PanelArea() {
             onTabClick={handleLeftTabClick}
             onTabClose={handleCloseLeftTab}
             onReorder={reorderLeftTabs}
+            onTogglePin={togglePinLeft}
             onCrossMove={handleCrossMove}
             onSplit={isMobile ? undefined : () => { enableSplit(); setActivePanel('right') }}
-            onCloseAll={leftTabs.length + rightTabs.length > 0 ? handleCloseAll : undefined}
+            onCloseAll={hasUnpinned ? handleCloseAll : undefined}
           />
           <div className="flex-1 overflow-auto bg-base">
             <PageContent path={activeLeftTab} />
@@ -176,7 +187,7 @@ export default function PanelArea() {
  * 탭바 - 같은 패널 내 정렬, 반대 패널로 드래그 이동 지원
  * @date 2026-05-23
  */
-function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTabClose, onReorder, onCrossMove, onClose, onSplit, onCloseAll }) {
+function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTabClose, onReorder, onTogglePin, onCrossMove, onClose, onSplit, onCloseAll }) {
   const [dragOverIdx, setDragOverIdx] = useState(null)
   const [dragOverBar, setDragOverBar] = useState(false)
 
@@ -238,7 +249,7 @@ function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTab
 
   return (
     <div
-      className="flex items-center bg-surface border-b border-theme px-2 gap-1 min-h-10 shrink-0"
+      className="flex items-center bg-surface border-b border-theme px-2 gap-1 min-h-15 shrink-0"
       style={{ borderTop: `2px solid ${isActive ? 'var(--accent)' : 'transparent'}` }}
       onDragOver={handleBarDragOver}
       onDrop={handleBarDrop}
@@ -254,19 +265,31 @@ function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTab
             onDragEnd={handleDragEnd}
             onMouseDown={(e) => { e.stopPropagation(); onTabClick(tab.path) }}
             className={`
-              flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs cursor-pointer whitespace-nowrap select-none transition-all
+              flex items-center gap-2 px-4 py-3 rounded-md text-xs cursor-pointer whitespace-nowrap select-none transition-all
               ${activeTab === tab.path ? 'bg-elevated text-primary' : 'text-muted hover-text-primary hover-bg-elevated'}
               ${dragOverIdx === idx && sharedDrag.current?.side !== side ? 'ring-1 ring-accent' : ''}
             `}
             style={{ opacity: sharedDrag.current?.path === tab.path ? 0.4 : 1 }}
           >
             {tab.label}
+            {/* 탭 고정/해제 토글 — 고정 시 accent 색 채움 - 2026-07-24 */}
             <button
-              onMouseDown={(e) => { e.stopPropagation(); onTabClose(tab.path) }}
-              className="hover-text-danger transition-colors cursor-pointer rounded p-0.5"
+              onMouseDown={(e) => { e.stopPropagation(); onTogglePin?.(tab.path) }}
+              title={tab.pinned ? '고정 해제' : '탭 고정'}
+              className={`transition-colors cursor-pointer rounded p-0.5 ${tab.pinned ? '' : 'text-muted hover-text-primary'}`}
+              style={tab.pinned ? { color: 'rgba(251,191,36,0.5)' } : undefined}
             >
-              <X size={11} />
+              <Bookmark size={13} fill={tab.pinned ? 'currentColor' : 'none'} />
             </button>
+            {/* 고정 탭은 X 숨김 → 실수 닫기 방지 - 2026-07-24 */}
+            {!tab.pinned && (
+              <button
+                onMouseDown={(e) => { e.stopPropagation(); onTabClose(tab.path) }}
+                className="hover-text-danger transition-colors cursor-pointer rounded p-0.5"
+              >
+                <X size={13} />
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -274,7 +297,7 @@ function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTab
       {onCloseAll && (
         <button
           onClick={onCloseAll}
-          title="모두 닫기"
+          title="고정 제외 모두 닫기"
           className="p-1.5 rounded-md text-muted hover-text-danger hover-bg-elevated transition-colors shrink-0 cursor-pointer"
         >
           <XSquare size={15} />

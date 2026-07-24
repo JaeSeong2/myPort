@@ -81,16 +81,9 @@ export function Textarea({ value, onChange, rows = 2 }) {
  * 페이지 상단 구분선 - h2 타이틀 대체 (accent 바 + 라벨 + 수평선)
  * @param {string} title
  */
-export function PageTitle({ title }) {
-  return (
-    <div className="flex items-center gap-2 shrink-0">
-      <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-      <span className="w-0.5 h-4 rounded-full bg-accent shrink-0" />
-      <span className="text-xs font-semibold text-secondary tracking-wide">{title}</span>
-      <span className="w-0.5 h-4 rounded-full bg-accent shrink-0" />
-      <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-    </div>
-  )
+export function PageTitle() {
+  // 탭 라벨이 페이지명을 이미 표시하므로 화면 상단 제목은 숨김 - 2026-07-24
+  return null
 }
 
 /**
