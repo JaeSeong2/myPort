@@ -81,3 +81,37 @@
   from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+/* ── react-grid-layout 테마 - 2026-07-25 ── */
+.react-grid-item.react-grid-placeholder {
+  background: var(--accent) !important;
+  opacity: 0.15 !important;
+  border-radius: 16px;
+}
+.react-grid-item.react-grid-placeholder.placeholder-resizing {
+  opacity: 0.22 !important;
+}
+/* 리사이즈 핸들 그립 색상 테마화 */
+.react-grid-item > .react-resizable-handle::after {
+  border-right-color: var(--text-muted);
+  border-bottom-color: var(--text-muted);
+}
+/* 드래그·리사이즈 중 부드러운 전환 */
+.react-grid-item.react-draggable-dragging,
+.react-grid-item.resizing {
+  transition: none !important;
+  z-index: 20;
+}
+
+/* ── 인쇄: 문서 미리보기(.print-area)만 출력, 나머지 화면 숨김 - 2026-07-24 ── */
+@media print {
+  body * { visibility: hidden !important; }
+  .print-area, .print-area * { visibility: visible !important; }
+  .print-area {
+    position: absolute; left: 0; top: 0; width: 100%;
+    margin: 0; box-shadow: none !important;
+  }
+  .doc-sheet { width: 100% !important; padding: 0 !important; box-shadow: none !important; }
+  .no-print { display: none !important; }
+  @page { size: A4; margin: 12mm; }
+}

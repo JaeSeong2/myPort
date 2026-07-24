@@ -1,5 +1,6 @@
 // 앱 루트 - React Router 전체 라우팅 구성 - 2026-05-23
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+// HashRouter 사용: 정적 호스팅(Railway 등)에서 새로고침 404 방지 (서버 rewrite 불필요) - 2026-07-24
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { LanguageProvider } from './context/LanguageContext'
 import { AuthProvider }     from './context/AuthContext'
 import LoginPage from './pages/LoginPage'
@@ -10,7 +11,7 @@ export default function App() {
   return (
     <LanguageProvider>
     <AuthProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/main" element={<MainPage />}>
@@ -18,7 +19,7 @@ export default function App() {
             <Route path="*" element={<PanelArea />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
     </LanguageProvider>
   )

@@ -116,7 +116,7 @@ export default function DashboardWorker() {
               <span style={{ color: c.color }}>{c.icon}</span>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold text-primary">{c.value}</span>
+              <span className="text-xl font-bold text-primary">{c.value}</span>
               <span className="text-sm text-muted">{c.unit}</span>
             </div>
           </div>

@@ -1,11 +1,12 @@
 // 좌측 사이드바 - 트리 구조 메뉴, 접기/펼치기, 활성 패널 기반 네비게이션 - 2026-05-23
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ChevronDown, ChevronRight, Hammer } from 'lucide-react'
+import { ChevronDown, ChevronRight, Hammer, Printer } from 'lucide-react'
 import { menuConfig } from '../../data/menuConfig'
 import { usePanelContext } from '../../context/PanelContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
+import DocOutputModal from '../print/DocOutputModal'
 
 export default function Sidebar({ open, isMobile = false }) {
   const navigate  = useNavigate()
@@ -20,6 +21,7 @@ export default function Sidebar({ open, isMobile = false }) {
     openInRightPanel,
   } = usePanelContext()
   const [expanded, setExpanded] = useState({ 'work-order': true })
+  const [docOpen, setDocOpen]   = useState(false) // 문서 출력 팝업 - 2026-07-24
 
   const toggleExpand = (id) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))
@@ -60,6 +62,7 @@ export default function Sidebar({ open, isMobile = false }) {
     .filter(Boolean)
 
   return (
+    <>
     <aside
       className={`
         bg-surface border-r border-theme flex flex-col overflow-hidden
@@ -129,6 +132,21 @@ export default function Sidebar({ open, isMobile = false }) {
           </div>
         ))}
       </nav>
+
+      {/* 하단 고정: 문서 출력 팝업 진입 - 2026-07-24 */}
+      <div className="border-t border-theme p-2 shrink-0">
+        <button
+          onClick={() => setDocOpen(true)}
+          title="문서 출력"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-secondary hover-text-primary hover-bg-elevated transition-colors cursor-pointer"
+        >
+          <Printer size={17} className="shrink-0" />
+          {(open || isMobile) && <span className="text-xs font-medium">문서 출력</span>}
+        </button>
+      </div>
     </aside>
+
+    <DocOutputModal open={docOpen} onClose={() => setDocOpen(false)} />
+    </>
   )
 }

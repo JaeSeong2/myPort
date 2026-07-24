@@ -134,7 +134,7 @@ export default function PanelArea() {
           </Panel>
 
           <Separator
-            style={{ width: '4px', backgroundColor: 'var(--text-muted)', cursor: 'col-resize', flexShrink: 0 }}
+            style={{ width: '2px', backgroundColor: 'var(--accent)', cursor: 'col-resize', flexShrink: 0 }}
           />
 
           <Panel defaultSize={50} minSize={20}>
@@ -249,7 +249,7 @@ function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTab
 
   return (
     <div
-      className="flex items-center bg-surface border-b border-theme px-2 gap-1 min-h-15 shrink-0"
+      className="flex items-center bg-base border-b border-theme px-2 gap-1 min-h-15 shrink-0"
       style={{ borderTop: `2px solid ${isActive ? 'var(--accent)' : 'transparent'}` }}
       onDragOver={handleBarDragOver}
       onDrop={handleBarDrop}
