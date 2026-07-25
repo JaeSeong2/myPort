@@ -75,6 +75,10 @@
   .divider { border-color: var(--border); }
 
   .animate-fade-in { animation: fadeInDown 0.2s ease; }
+
+  /* 스크롤은 유지하되 스크롤바만 숨김 — 위젯 래퍼 div 영역에 사용 - 2026-07-25 */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
 @keyframes fadeInDown {
