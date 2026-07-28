@@ -4,6 +4,7 @@ import ReactGridLayout, { useContainerWidth } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import { GripVertical, EyeOff, SlidersHorizontal, Check } from 'lucide-react'
+import { useIsMobile } from '../../hooks/useBreakpoint'
 
 const accentTint = (pct) => `color-mix(in srgb, var(--accent) ${pct}%, transparent)`
 
@@ -63,6 +64,7 @@ export default function WidgetBoard({ grid, content }) {
     gridLayout, hiddenWidgets, addWidget, removeWidget, onLayoutChange, labelOf, iconOf,
   } = grid
   const { width, containerRef, mounted } = useContainerWidth()
+  const isMobile = useIsMobile() // <768px: 드래그 그리드 대신 세로 스택 - 2026-07-28
 
   // 팔레트에서 드래그 중인 위젯 메타 — 드롭 시 위치 지정 배치에 사용 - 2026-07-25
   const [dragWidget, setDragWidget] = useState(null)
@@ -104,11 +106,30 @@ export default function WidgetBoard({ grid, content }) {
     setDragWidget(null)
   }
 
+  // 모바일/세로: 자유 그리드 대신 세로 스택 뷰 — 저장 순서(y→x)·상대 크기(h) 반영, 편집 UI 숨김 - 2026-07-28
+  if (isMobile) {
+    const ordered = [...gridLayout].sort((a, b) => a.y - b.y || a.x - b.x)
+    return (
+      <div className="h-full overflow-y-auto no-scrollbar px-3 pt-2 pb-4 flex flex-col gap-3">
+        {ordered.map((item) => (
+          <div key={item.i} className="shrink-0 overflow-hidden" style={{ height: Math.max(item.h * 30, 150) }}>
+            <div className="h-full overflow-auto *:h-full">
+              {content[item.i]}
+            </div>
+          </div>
+        ))}
+        {ordered.length === 0 && (
+          <p className="text-xs text-muted text-center py-10">표시할 위젯이 없습니다.</p>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="h-full flex">
       {/* 메인 보드 영역 — 상단 여백 축소 · 팔레트 위젯 드롭 대상 */}
       <div
-        className="flex-1 min-w-0 overflow-y-auto pl-4 pr-2 md:pl-6 md:pr-2 pt-2 pb-4 md:pb-6"
+        className="flex-1 min-w-0 overflow-y-auto no-scrollbar pl-4 pr-2 md:pl-6 md:pr-2 pt-2 pb-4 md:pb-6"
         onDragOver={handleBoardDragOver}
         onDrop={handleBoardDrop}
       >

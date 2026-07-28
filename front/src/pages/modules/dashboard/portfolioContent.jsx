@@ -14,6 +14,14 @@ const FEATURES = [
   { icon: <ClipboardList size={15} />, label: '실적 보고',     desc: '일/월별 생산 실적 차트 분석' },
 ]
 
+// 기술 스택 핵심 — 카테고리별 주요 기술만 - 2026-07-28
+const TECH = [
+  { group: 'Frontend', items: ['React 19', 'Vite', 'Tailwind CSS'] },
+  { group: 'Backend',  items: ['FastAPI', 'Motor (async)'] },
+  { group: 'Database', items: ['MongoDB Atlas'] },
+  { group: 'AI',       items: ['Groq', 'Llama 3.3 70B'] },
+]
+
 // 포트폴리오 전체를 하나의 위젯 내용으로 - 2026-07-24
 export const PortfolioContent = (
   <div className="flex flex-col gap-6">
@@ -64,10 +72,25 @@ export const PortfolioContent = (
       </div>
     </div>
 
-    {/* 기술 스택 요약 */}
-    <div className="flex items-center gap-3 pt-4 border-t border-theme">
-      <span className="text-xs text-muted">|</span>
-      <span className="text-xs text-muted">React 19 + FastAPI + MongoDB Atlas</span>
+    {/* 기술 스택 핵심 */}
+    <div>
+      <h3 className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">기술 스택</h3>
+      <div className="bg-surface border border-theme rounded-lg p-4 flex flex-col gap-3">
+        {TECH.map((t) => (
+          <div key={t.group} className="flex items-center gap-3">
+            <span className="text-xs text-muted w-20 shrink-0">{t.group}</span>
+            <div className="flex flex-wrap gap-1.5">
+              {t.items.map((it) => (
+                <span key={it}
+                  className="text-xs font-medium px-2.5 py-1 rounded-md"
+                  style={{ background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }}>
+                  {it}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 )

@@ -9,6 +9,10 @@ const FULL_ACTIONS = { add: true, edit: true, delete: true, excel_up: true, exce
 // 사용자 전환 드롭다운에 표시할 계정 목록 (관리자 + 3명)
 const SWITCHER_IDS = new Set(['admin', 'emp002', 'emp003', 'emp007'])
 
+// 마지막 선택 사용자 저장 키 — 새로고침 후에도 같은 사용자 유지(관리자 외 포함) - 2026-07-28
+const CURRENT_USER_KEY = 'mes_current_user'
+const loadSavedUserId = () => { try { return localStorage.getItem(CURRENT_USER_KEY) } catch { return null } }
+
 // DB에 사용자가 없을 때 사용할 기본 관리자
 const DEFAULT_ADMIN = {
   _id: '__admin__',
@@ -35,12 +39,13 @@ export function AuthProvider({ children }) {
         const list = (json.data ?? []).filter(u => SWITCHER_IDS.has(u.user_id))
         if (list.length === 0) return
         setUsers(list)
-        // 최초 로드 시 첫 번째 ADMIN 사용자로 자동 설정
-        setCurrentUser(prev =>
-          prev._id === '__admin__'
-            ? (list.find(u => u.role === 'ADMIN') ?? list[0])
-            : prev
-        )
+        // 최초 로드 시: 저장된 마지막 사용자 복원 → 없으면 첫 ADMIN - 2026-07-28
+        setCurrentUser(prev => {
+          if (prev._id !== '__admin__') return prev // 이미 전환된 상태면 유지
+          const savedId = loadSavedUserId()
+          const saved = savedId && list.find(u => u.user_id === savedId)
+          return saved || list.find(u => u.role === 'ADMIN') || list[0]
+        })
       })
       .catch(() => {})
 
@@ -68,7 +73,12 @@ export function AuthProvider({ children }) {
     return menus.includes(menuId)
   }
 
-  const switchUser = (user) => { setCurrentUser(user); setDropdownOpen(false) }
+  // 사용자 전환 — 선택을 저장해 새로고침 후에도 유지 - 2026-07-28
+  const switchUser = (user) => {
+    setCurrentUser(user)
+    setDropdownOpen(false)
+    try { localStorage.setItem(CURRENT_USER_KEY, user.user_id) } catch { /* noop */ }
+  }
 
   return (
     <AuthContext.Provider value={{

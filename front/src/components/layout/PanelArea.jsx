@@ -13,12 +13,14 @@ import DashboardPage from '../../pages/modules/dashboard/DashboardPage'
  * @date 2026-05-23
  */
 export default function PanelArea() {
-  const isMobile  = useIsMobile()
+  // 태블릿 이하(<1024)는 분할 없이 단일 패널로 강제 — 좁은 폭에서 좌우 분할 방지 - 2026-07-28
+  const isTabletDown = useIsMobile(1024)
   const location  = useLocation()
   const navigate  = useNavigate()
   const {
     activePanel, setActivePanel,
     splitEnabled, enableSplit,
+    splitLayout, setSplitLayout,
     leftTabs,  activeLeftTab,  setActiveLeftTab,  addToLeftPanel,  closeLeftTab,  reorderLeftTabs,  togglePinLeft,
     rightTabs, activeRightTab, setActiveRightTab, closeRightTab, reorderRightTabs, togglePinRight, crossMoveTab, closeSplit,
     closeAllTabs,
@@ -110,9 +112,15 @@ export default function PanelArea() {
         </div>
       )}
 
-      {splitEnabled ? (
-        <PanelGroup orientation="horizontal" style={{ height: '100%' }}>
-          <Panel defaultSize={50} minSize={20}>
+      {splitEnabled && !isTabletDown ? (
+        <PanelGroup
+          orientation="horizontal"
+          style={{ height: '100%' }}
+          // 저장된 분할 사이즈 복원(없으면 50:50) — 드래그 종료 시 저장 - 2026-07-28
+          defaultLayout={splitLayout ?? undefined}
+          onLayoutChanged={(layout) => setSplitLayout(layout)}
+        >
+          <Panel id="left" defaultSize={50} minSize={20}>
             <div className="h-full flex flex-col" onMouseDown={() => setActivePanel('left')}>
               <TabBar
                 side="left"
@@ -137,7 +145,7 @@ export default function PanelArea() {
             style={{ width: '2px', backgroundColor: 'var(--accent)', cursor: 'col-resize', flexShrink: 0 }}
           />
 
-          <Panel defaultSize={50} minSize={20}>
+          <Panel id="right" defaultSize={50} minSize={20}>
             <div className="h-full flex flex-col" onMouseDown={() => setActivePanel('right')}>
               <TabBar
                 side="right"
@@ -171,7 +179,7 @@ export default function PanelArea() {
             onReorder={reorderLeftTabs}
             onTogglePin={togglePinLeft}
             onCrossMove={handleCrossMove}
-            onSplit={isMobile ? undefined : () => { enableSplit(); setActivePanel('right') }}
+            onSplit={isTabletDown ? undefined : () => { enableSplit(); setActivePanel('right') }}
             onCloseAll={hasUnpinned ? handleCloseAll : undefined}
           />
           <div className="flex-1 overflow-auto bg-base">

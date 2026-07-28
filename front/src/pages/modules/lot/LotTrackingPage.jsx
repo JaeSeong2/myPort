@@ -174,10 +174,11 @@ export default function LotTrackingPage() {
   const setLF = (key) => (e) => setLogForm(p => ({ ...p, [key]: e.target.value }))
 
   return (
-    <div className="h-full flex overflow-hidden">
+    // 모바일/세로: 상하 스택(목록 위·상세 아래), md 이상: 좌우 배치 — 우측 상세 잘림 방지 - 2026-07-28
+    <div className="h-full flex flex-col md:flex-row overflow-hidden">
 
-      {/* ── 왼쪽: LOT 목록 패널 ── */}
-      <div className="w-72 flex flex-col border-r border-theme overflow-hidden shrink-0">
+      {/* ── 왼쪽(모바일 상단): LOT 목록 패널 ── */}
+      <div className="w-full md:w-72 h-64 md:h-auto flex flex-col border-b md:border-b-0 md:border-r border-theme overflow-hidden shrink-0">
         {/* 헤더 + 필터 */}
         <div className="p-4 border-b border-theme shrink-0">
           <PageTitle title={t('lot.title')} />
@@ -401,13 +402,13 @@ function LotDetailPanel({ lot, logs, productions, inspections, canEdit, onEditLo
             )}
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-4 gap-x-4 gap-y-3 text-xs">
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 text-xs">
           <HeaderInfo label="품번"     value={lot.product_code} />
           <HeaderInfo label="품명"     value={lot.product_name} />
           <HeaderInfo label="지시번호" value={lot.order_id} />
           <HeaderInfo label="완료일"   value={lot.closed_at ?? '-'} />
         </div>
-        <div className="mt-3 pt-3 grid grid-cols-3 gap-x-4 text-xs"
+        <div className="mt-3 pt-3 grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 text-xs"
           style={{ borderTop: '1px dashed var(--border)' }}>
           <HeaderInfo label="수량"     value={`${lot.planned_qty} EA`} />
           <HeaderInfo label="수율"     value={yieldPct != null ? `${yieldPct}%` : '-'} accent={yieldPct != null} />

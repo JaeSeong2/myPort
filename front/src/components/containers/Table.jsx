@@ -53,7 +53,8 @@ export default function Table({ columns, data = [], loading = false, emptyText =
   return (
     <div className="bg-surface border border-theme rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
       <div className="overflow-auto flex-1 min-h-0">
-        <table className="w-full text-sm table-fixed">
+        {/* 좁은 화면(모바일/세로)에선 min-width로 가로 스크롤 → 열 찌그러짐 방지, md 이상은 전체폭 맞춤 - 2026-07-28 */}
+        <table className="w-full min-w-170 md:min-w-0 text-sm table-fixed">
           <thead className="sticky top-0 z-10">
             <tr className="border-b border-theme bg-elevated">
               {columns.map(col => (

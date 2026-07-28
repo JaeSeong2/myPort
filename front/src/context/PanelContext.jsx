@@ -1,5 +1,9 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import { useAuth } from './AuthContext'
+import { fetchPrefs, savePrefsSlice } from '../services/prefs'
+
+// 서버 저장 슬라이스 키 — 사용자 환경설정 문서 내 필드명 - 2026-07-28
+const PANELS_KEY = 'mes_panels'
 
 const PanelContext = createContext(null)
 
@@ -49,31 +53,61 @@ export function PanelProvider({ children }) {
   const [activeLeftTab, setActiveLeftTab]   = useState(_init.activeLeftTab ?? null)
   const [rightTabs, setRightTabs]     = useState(sortPinned(dedupeTabs(_init.rightTabs)))
   const [activeRightTab, setActiveRightTab] = useState(_init.activeRightTab ?? null)
+  // 분할 패널 사이즈(구분선 위치) — { left, right } 퍼센트. null이면 기본 50:50 - 2026-07-28
+  const [splitLayout, setSplitLayout] = useState(_init.splitLayout ?? null)
   const [toast, setToast]             = useState(null)
   const toastTimer = useRef(null)
 
   // 현재 로드된 사용자 키 추적 — 저장 시 이 키를 사용해 사용자 전환 중 오염 방지 - 2026-07-06
   const loadedUid = useRef(uid)
 
-  // 사용자 전환 시 해당 사용자의 저장된 탭 상태로 교체 - 2026-07-06
-  useEffect(() => {
-    if (loadedUid.current === uid) return
-    loadedUid.current = uid
-    const data = loadPanels(uid)
+  // 서버 복원 완료 전에는 저장 금지 — 초기 로컬 기본값이 서버를 덮어쓰는 것 방지 - 2026-07-28
+  const hydrated = useRef(false)
+
+  // 저장된 블롭을 현재 상태에 적용(로컬·서버 공통) - 2026-07-28
+  const applyPanels = (data) => {
     setLeftTabs(sortPinned(dedupeTabs(data.leftTabs)))
     setRightTabs(sortPinned(dedupeTabs(data.rightTabs)))
     setActiveLeftTab(data.activeLeftTab ?? null)
     setActiveRightTab(data.activeRightTab ?? null)
     setSplitEnabled(data.splitEnabled ?? false)
     setActivePanel(data.activePanel ?? 'left')
+    setSplitLayout(data.splitLayout ?? null)
+  }
+
+  // 사용자 전환 시 로컬 캐시로 즉시 교체(즉시 렌더) — 서버 복원 전까지 저장 잠금 - 2026-07-06
+  useEffect(() => {
+    if (loadedUid.current === uid) return
+    loadedUid.current = uid
+    hydrated.current = false
+    applyPanels(loadPanels(uid))
   }, [uid])
 
-  // 탭 상태 변경 시 현재 사용자 키에 영속화 (새로고침·브라우저 종료 후 복원) - 2026-07-06
+  // 서버(원본)에서 로드 → 있으면 서버 우선 적용, 없으면 로컬을 서버로 이관. 이후 저장 잠금 해제 - 2026-07-28
   useEffect(() => {
-    savePanels(loadedUid.current, {
-      leftTabs, rightTabs, activeLeftTab, activeRightTab, splitEnabled, activePanel,
-    })
-  }, [leftTabs, rightTabs, activeLeftTab, activeRightTab, splitEnabled, activePanel])
+    let cancelled = false
+    ;(async () => {
+      const remote = await fetchPrefs(uid)
+      if (cancelled) return
+      const p = remote?.[PANELS_KEY]
+      if (p && typeof p === 'object') {
+        applyPanels(p)
+        savePanels(uid, p) // 로컬 캐시 동기화
+      } else if (remote) {
+        savePrefsSlice(uid, PANELS_KEY, loadPanels(uid)) // 서버에 없음 → 최초 이관
+      }
+      hydrated.current = true
+    })()
+    return () => { cancelled = true }
+  }, [uid])
+
+  // 탭 상태 변경 시 로컬 캐시 + 서버에 영속화 (새로고침·기기 변경 후에도 복원) - 2026-07-28
+  useEffect(() => {
+    if (!hydrated.current) return // 서버 복원 전 저장 잠금
+    const blob = { leftTabs, rightTabs, activeLeftTab, activeRightTab, splitEnabled, activePanel, splitLayout }
+    savePanels(loadedUid.current, blob)
+    savePrefsSlice(loadedUid.current, PANELS_KEY, blob)
+  }, [leftTabs, rightTabs, activeLeftTab, activeRightTab, splitEnabled, activePanel, splitLayout])
 
   const showToast = useCallback((msg) => {
     if (toastTimer.current) clearTimeout(toastTimer.current)
@@ -234,6 +268,7 @@ export function PanelProvider({ children }) {
     <PanelContext.Provider value={{
       activePanel, setActivePanel,
       splitEnabled, enableSplit,
+      splitLayout, setSplitLayout,
       leftTabs,  activeLeftTab,  setActiveLeftTab,  addToLeftPanel,  closeLeftTab,  reorderLeftTabs,  togglePinLeft,
       rightTabs, activeRightTab, setActiveRightTab, openInRightPanel, closeRightTab, reorderRightTabs, togglePinRight,
       crossMoveTab,
