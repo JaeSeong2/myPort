@@ -174,8 +174,8 @@ export default function LotTrackingPage() {
   const setLF = (key) => (e) => setLogForm(p => ({ ...p, [key]: e.target.value }))
 
   return (
-    // 모바일/세로: 상하 스택(목록 위·상세 아래), md 이상: 좌우 배치 — 우측 상세 잘림 방지 - 2026-07-28
-    <div className="h-full flex flex-col md:flex-row overflow-hidden">
+    // 모바일/세로: 상하 스택 + 페이지 전체 스크롤(공정 이력 잘림 방지), md 이상: 좌우 2단 분할 - 2026-07-28
+    <div className="h-full flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
 
       {/* ── 왼쪽(모바일 상단): LOT 목록 패널 ── */}
       <div className="w-full md:w-72 h-64 md:h-auto flex flex-col border-b md:border-b-0 md:border-r border-theme overflow-hidden shrink-0">
@@ -222,8 +222,8 @@ export default function LotTrackingPage() {
         </div>
       </div>
 
-      {/* ── 오른쪽: LOT 상세 패널 ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* ── 오른쪽(모바일 하단): LOT 상세 패널 ── 모바일은 자연 높이(페이지 스크롤), md 이상은 내부 스크롤 */}
+      <div className="md:flex-1 flex flex-col overflow-visible md:overflow-hidden md:min-h-0">
         {selectedLot && (detail || detailLoad) ? (
           detailLoad ? (
             <div className="flex-1 flex items-center justify-center text-muted text-sm">로딩 중...</div>
@@ -380,7 +380,7 @@ function LotDetailPanel({ lot, logs, productions, inspections, canEdit, onEditLo
     : lot.opened_at
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col md:h-full overflow-visible md:overflow-hidden">
       {/* ── 헤더 카드 ── */}
       <div className="mx-5 mt-5 mb-4 rounded-2xl p-5 shrink-0"
         style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
@@ -417,8 +417,8 @@ function LotDetailPanel({ lot, logs, productions, inspections, canEdit, onEditLo
         {lot.note && <div className="mt-3 text-xs text-muted">{lot.note}</div>}
       </div>
 
-      {/* ── 공정 이력 (역순) ── */}
-      <div className="flex-1 overflow-y-auto px-5 pb-6">
+      {/* ── 공정 이력 (역순) ── 모바일은 자연 높이(페이지 스크롤), md 이상은 내부 스크롤 */}
+      <div className="md:flex-1 md:overflow-y-auto md:min-h-0 px-5 pb-6">
         <div className="text-sm font-semibold text-primary mb-4">
           공정 이력 <span className="text-xs font-normal text-muted">(역순 추적)</span>
         </div>

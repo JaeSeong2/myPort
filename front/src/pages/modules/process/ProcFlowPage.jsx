@@ -172,9 +172,10 @@ export default function FlowPage() {
   const setF = (key) => (e) => setForm(p => ({ ...p, [key]: e.target.value }))
 
   return (
-    <div className="h-full flex overflow-hidden">
+    // 모바일/세로: 상하 스택(목록 위·상세 아래), md 이상: 좌우 배치 — 우측 잘림 방지 - 2026-07-28
+    <div className="h-full flex flex-col md:flex-row overflow-hidden">
       {/* ── Left: Product List ── */}
-      <div className="w-64 flex flex-col border-r border-theme overflow-hidden shrink-0">
+      <div className="w-full md:w-64 h-64 md:h-auto flex flex-col border-b md:border-b-0 md:border-r border-theme overflow-hidden shrink-0">
         <div className="p-4 border-b border-theme shrink-0">
           <PageTitle title={t('flow.title')} />
           <input
