@@ -116,19 +116,31 @@ async def ai_insight(request: Request):
     db      = request.app.state.db
     summary = await _build_summary(db)
 
+    # 한국어 전용 강제 — 한자/베트남어 등 타 언어 토큰 혼입(language leakage) 방지 - 2026-08-02
+    system_msg = (
+        "당신은 한국 제조 현장의 MES 데이터 분석가입니다. "
+        "반드시 100% 표준 한국어(한글)로만 작성하세요. "
+        "한자, 일본어, 중국어, 베트남어 등 한글이 아닌 문자를 절대 사용하지 마세요. "
+        "예: '良好' → '양호', 'thấp' → '낮음'. "
+        "숫자와 %, 영문 약어(MES, KPI 등) 외에는 오직 한글만 사용합니다."
+    )
+
     prompt = (
         "다음은 MES(제조실행시스템)의 이번 달 KPI 요약 데이터입니다.\n"
         f"{summary}\n\n"
-        "위 데이터를 분석하여 반드시 아래 JSON 형식으로만 응답하세요. 다른 말은 쓰지 마세요:\n"
+        "위 데이터를 분석하여 반드시 아래 JSON 형식으로만, 순수 한국어로 응답하세요. 다른 말은 쓰지 마세요:\n"
         '{"성과": "핵심 성과 1~2문장", "주의": "주의가 필요한 항목 1~2문장", "제안": "개선 제안 1~2문장"}'
     )
 
     client   = AsyncGroq(api_key=api_key)
     response = await client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
+        messages=[
+            {"role": "system", "content": system_msg},
+            {"role": "user",   "content": prompt},
+        ],
         max_tokens=AI_MAX_TOKENS,
-        temperature=0.5,
+        temperature=0.3,
     )
 
     _ai_call_log[ip][today] += 1
