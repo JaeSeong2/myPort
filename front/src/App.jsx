@@ -6,6 +6,7 @@ import { AuthProvider }     from './context/AuthContext'
 import LoginPage from './pages/LoginPage'
 import MainPage from './pages/MainPage'
 import PublicLotPage from './pages/PublicLotPage'
+import PublicCamPage from './pages/PublicCamPage'
 import PanelArea from './components/layout/PanelArea'
 
 export default function App() {
@@ -17,6 +18,8 @@ export default function App() {
           <Route path="/" element={<LoginPage />} />
           {/* QR 스캔 진입용 공개 LOT 조회(로그인 불필요) - 2026-08-02 */}
           <Route path="/m/lot/:lotNo" element={<PublicLotPage />} />
+          {/* 폰 카메라 송출 페이지(로그인 불필요) - 2026-08-02 */}
+          <Route path="/m/cam" element={<PublicCamPage />} />
           <Route path="/main" element={<MainPage />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="*" element={<PanelArea />} />

@@ -1,7 +1,7 @@
 // MES 사이드바 메뉴 트리 설정 - 2026-05-23
 import {
   LayoutDashboard, ClipboardList, BarChart2,
-  Wrench, ShieldCheck, Package, GitBranch, Settings, Users, Database,
+  Wrench, ShieldCheck, Package, GitBranch, Settings, Users, Database, ScanEye,
 } from 'lucide-react'
 
 export const menuConfig = [
@@ -68,6 +68,11 @@ export const menuConfig = [
     children: [
       { id: 'proc-flow', labelKey: 'menu.proc.flow', label: '공정 흐름', path: '/main/process/flow' },
     ],
+  },
+  {
+    // AI 비전 관제 — 폰 카메라 실시간 영상 + 객체 감지 - 2026-08-02
+    id: 'vision-monitor', label: 'AI 비전 관제',
+    icon: ScanEye, path: '/main/monitor/vision',
   },
   {
     id: 'settings', labelKey: 'menu.settings', label: '시스템 설정',

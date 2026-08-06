@@ -17,6 +17,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
+    "@tensorflow-models/coco-ssd": "^2.2.3",
+    "@tensorflow/tfjs": "^4.22.0",
     "jsqr": "^1.4.0",
     "lucide-react": "^1.16.0",
     "qrcode": "^1.5.4",

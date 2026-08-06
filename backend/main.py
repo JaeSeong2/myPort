@@ -21,6 +21,7 @@ from routers.lot          import router as lot_router,          ensure_indexes a
 from routers.prefs        import router as prefs_router,        ensure_indexes as prefs_indexes
 from routers.ai           import router as ai_router
 from routers.alerts       import router as alerts_router
+from routers.camera       import router as camera_router
 
 load_dotenv()
 
@@ -115,6 +116,7 @@ app.include_router(lot_router)
 app.include_router(prefs_router)
 app.include_router(ai_router)
 app.include_router(alerts_router)
+app.include_router(camera_router)
 
 
 @app.get("/api/health")

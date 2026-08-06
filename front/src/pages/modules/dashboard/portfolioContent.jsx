@@ -1,17 +1,19 @@
-// 포트폴리오 위젯 렌더링 내용 — 소개/주요 기능/데이터 구성/기술 스택 요약 - 2026-07-24
+// 포트폴리오 위젯 렌더링 내용 — 소개/주요 기능/기술 스택 요약 - 2026-07-24
 import {
-  Factory, ClipboardList, Package, ShieldCheck, Layers, Wrench, GitMerge,
+  Factory, ClipboardList, Package, ShieldCheck, GitMerge,
+  QrCode, Activity, Sparkles, ScanEye,
 } from 'lucide-react'
 
+// 주요 기능 — 기본 MES 모듈 + 실시간/AI 확장 기능 반영 - 2026-08-02
 const FEATURES = [
-  { icon: <ClipboardList size={15} />, label: '작업지시 관리', desc: '작업지시 등록·배정·이력 추적' },
-  { icon: <Factory size={15} />,       label: '생산 실적',     desc: 'MES 백플러시 자동 재고 반영' },
-  { icon: <Package size={15} />,       label: '재고/자재',     desc: '입출고·재고 현황 실시간 조회' },
-  { icon: <ShieldCheck size={15} />,   label: '품질 검사',     desc: '수입·공정·최종 검사 결과 관리' },
-  { icon: <Layers size={15} />,        label: 'BOM 관리',      desc: '제품별 자재 소요량 정의' },
-  { icon: <Wrench size={15} />,        label: '설비 현황',     desc: '설비 상태 모니터링 및 유형별 관리' },
-  { icon: <GitMerge size={15} />,      label: '공정 흐름',     desc: '제품별 공정 순서·사이클타임 정의' },
-  { icon: <ClipboardList size={15} />, label: '실적 보고',     desc: '일/월별 생산 실적 차트 분석' },
+  { icon: <ClipboardList size={15} />, label: '작업지시·생산',   desc: '지시·배정부터 실적·백플러시 자동 재고 반영' },
+  { icon: <Package size={15} />,       label: '재고/자재',       desc: '입출고·재고 현황 실시간 조회' },
+  { icon: <ShieldCheck size={15} />,   label: '품질 검사',       desc: '수입·공정·최종 검사 결과 관리' },
+  { icon: <GitMerge size={15} />,      label: 'BOM·공정 흐름',   desc: '자재 소요량·공정 순서 정의' },
+  { icon: <QrCode size={15} />,        label: 'LOT 추적 (QR)',   desc: '공정 이력 추적 + QR 모바일 조회' },
+  { icon: <Activity size={15} />,      label: '실시간 Andon·알림', desc: 'SSE 기반 설비 현황·이상 알림 실시간' },
+  { icon: <Sparkles size={15} />,      label: 'AI 생산 인사이트', desc: '월간 KPI 자동 분석 리포트' },
+  { icon: <ScanEye size={15} />,       label: 'AI 비전 관제',    desc: '폰 카메라 실시간 영상 + 객체 감지' },
 ]
 
 // 기술 스택 핵심 — 카테고리별 주요 기술만 - 2026-07-28
@@ -52,23 +54,6 @@ export const PortfolioContent = (
             </div>
           </div>
         ))}
-      </div>
-    </div>
-
-    {/* 데이터 구성 */}
-    <div>
-      <h3 className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">데이터 구성</h3>
-      <div className="bg-surface border border-theme rounded-lg p-4 text-xs text-muted leading-6">
-        <div className="grid grid-cols-2 gap-x-4">
-          <div>• 품목 15종 (완제품 5 · 반제품 2 · 원자재 5 · 소모품 3)</div>
-          <div>• 작업지시 20건 (완료 8 · 진행 5 · 대기 5 · 중단 2)</div>
-          <div>• 생산실적 13건 (완료 8 · 진행 5)</div>
-          <div>• 재고거래 20건 (입고 10 · 출고 10)</div>
-          <div>• BOM 등록 (완제품/반제품별 자재구성)</div>
-          <div>• 품질검사 15건 (수입·공정·최종)</div>
-          <div>• 설비 15종 (생산·유틸리티·안전·검사)</div>
-          <div>• 공정흐름 31단계 (7개 제품별 정의)</div>
-        </div>
       </div>
     </div>
 

@@ -20,6 +20,7 @@ import SysSettings     from '../pages/modules/settings/SysSettingsPage'
 import UserMgmt        from '../pages/modules/settings/UserMgmtPage'
 import ItemMgmt        from '../pages/modules/master-data/ItemMgmtPage'
 import BomMgmt         from '../pages/modules/master-data/BomMgmtPage'
+import VisionMonitor   from '../pages/modules/monitor/VisionMonitorPage'
 
 /** 경로 → 컴포넌트 매핑 (우측 패널 렌더링용) */
 export const pageRegistry = {
@@ -41,6 +42,7 @@ export const pageRegistry = {
   '/main/inventory/inout':     InvInout,
   '/main/process/flow':        ProcFlow,
   '/main/lot/tracking':        LotTracking,
+  '/main/monitor/vision':      VisionMonitor,
   '/main/process/bom':         BomMgmt,
   '/main/settings':            SysSettings,
   '/main/settings/items':      ItemMgmt,

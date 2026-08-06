@@ -11,7 +11,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:8000',
+      // ws:true — WebSocket(카메라 릴레이) 업그레이드 요청도 백엔드로 프록시 - 2026-08-02
+      '/api': { target: 'http://localhost:8000', ws: true },
     },
   },
 })
