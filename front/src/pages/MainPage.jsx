@@ -4,6 +4,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import TopBar  from '../components/layout/TopBar'
 import Sidebar from '../components/layout/Sidebar'
 import { PanelProvider } from '../context/PanelContext'
+import { RealtimeProvider } from '../context/RealtimeContext'
 import { useIsMobile }   from '../hooks/useBreakpoint'
 
 export default function MainPage() {
@@ -27,6 +28,7 @@ export default function MainPage() {
 
   return (
     <PanelProvider>
+    <RealtimeProvider>
       <div className="h-screen flex flex-col bg-base overflow-hidden">
         <TopBar
           sidebarOpen={sidebarOpen}
@@ -50,6 +52,7 @@ export default function MainPage() {
           </main>
         </div>
       </div>
+    </RealtimeProvider>
     </PanelProvider>
   )
 }

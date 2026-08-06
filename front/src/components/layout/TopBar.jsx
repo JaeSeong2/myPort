@@ -1,9 +1,10 @@
 // 상단 바 - 2026-05-23
 import { useEffect, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, Bell, Sun, Moon, ChevronDown, Check } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, Sun, Moon, ChevronDown, Check } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
+import NotificationCenter from './NotificationCenter'
 
 export default function TopBar({ sidebarOpen, onToggleSidebar, isMobile = false }) {
   const { theme, toggleTheme } = useTheme()
@@ -109,9 +110,7 @@ export default function TopBar({ sidebarOpen, onToggleSidebar, isMobile = false 
           <button onClick={toggleTheme} className={iconBtn} title={theme === 'dark' ? '라이트 모드' : '다크 모드'}>
             {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
           </button>
-          <button className={iconBtn} title="알림">
-            <Bell size={17} />
-          </button>
+          <NotificationCenter />
         </div>
       </div>
     </header>

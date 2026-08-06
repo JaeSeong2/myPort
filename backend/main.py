@@ -20,6 +20,7 @@ from routers.process_flow import router as process_flow_router, ensure_indexes a
 from routers.lot          import router as lot_router,          ensure_indexes as lot_indexes
 from routers.prefs        import router as prefs_router,        ensure_indexes as prefs_indexes
 from routers.ai           import router as ai_router
+from routers.alerts       import router as alerts_router
 
 load_dotenv()
 
@@ -113,6 +114,7 @@ app.include_router(process_flow_router)
 app.include_router(lot_router)
 app.include_router(prefs_router)
 app.include_router(ai_router)
+app.include_router(alerts_router)
 
 
 @app.get("/api/health")

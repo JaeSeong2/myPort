@@ -1,10 +1,11 @@
 // 관리자 대시보드 — 자유 그리드(드래그 이동 + 가로×세로 리사이즈) - 2026-07-25
-import { LayoutDashboard, Gauge, BarChart3, Boxes, Sparkles } from 'lucide-react'
+import { LayoutDashboard, Gauge, BarChart3, Boxes, Sparkles, Activity } from 'lucide-react'
 import { useWidgetGrid } from '../../../hooks/useWidgetGrid'
 import { useKpiData } from '../../../hooks/useKpiData'
 import WidgetBoard from '../../../components/dashboard/WidgetBoard'
 import { buildKpiContent } from './kpiWidgetContent'
 import { PortfolioContent } from './portfolioContent'
+import { AndonContent } from './andonWidget'
 import { UTILITY_WIDGETS, utilityContent } from './utilityWidgets'
 
 // 통합 위젯 레지스트리 — x/y/w/h(그리드 단위) + min/max로 리사이즈 범위 지정 - 2026-07-25
@@ -14,6 +15,7 @@ const WIDGETS = [
   { id: 'prod',      label: '일별 생산 실적',   icon: BarChart3,       x: 6, y: 6,  w: 6, h: 8,  minW: 3, minH: 5, maxW: 12, maxH: 16 },
   { id: 'inv',       label: '자재 재고 현황',   icon: Boxes,           x: 6, y: 14, w: 6, h: 8,  minW: 3, minH: 5, maxW: 12, maxH: 16 },
   { id: 'ai',        label: 'AI 생산 인사이트', icon: Sparkles,        x: 6, y: 22, w: 6, h: 8,  minW: 3, minH: 5, maxW: 12, maxH: 20 },
+  { id: 'andon',     label: '실시간 Andon',     icon: Activity,        x: 0, y: 16, w: 6, h: 9,  minW: 3, minH: 6, maxW: 12, maxH: 20 },
   ...UTILITY_WIDGETS,
 ]
 
@@ -22,6 +24,7 @@ export default function DashboardGrid() {
   const data = useKpiData()
   const content = {
     portfolio: PortfolioContent,
+    andon: <AndonContent />,
     ...buildKpiContent(data),
     ...utilityContent,
   }

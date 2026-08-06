@@ -1,16 +1,30 @@
 // LOT 추적 페이지 - 2026-05-25
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, ScanLine } from 'lucide-react'
+import QRCodeLib from 'qrcode'
 import { useLanguage } from '../../../context/LanguageContext'
 import { useAuth }     from '../../../context/AuthContext'
 import Modal  from '../../../components/containers/Modal'
 import Badge  from '../../../components/common/Badge'
+import QrScanner from '../../../components/common/QrScanner'
 import { Field, Input, Select, Textarea, PageTitle } from '../../../components/common/FormControls'
 import { API_BASE } from '../../../constants/api'
 
 const LOT_API   = `${API_BASE}/api/lots`
 const ITEMS_API = `${API_BASE}/api/items`
 const EMP_API   = `${API_BASE}/api/master?category=employee`
+
+// QR 조회 URL의 기준 주소 — 배포 주소(VITE_PUBLIC_BASE) 우선, 없으면 현재 접속 주소 - 2026-08-02
+const PUBLIC_BASE = import.meta.env.VITE_PUBLIC_BASE || window.location.origin
+const lotPublicUrl = (lotNo) => `${PUBLIC_BASE}/#/m/lot/${encodeURIComponent(lotNo)}`
+
+// 스캔 결과(URL 또는 LOT번호)에서 LOT번호 추출 — /m/lot/{lotNo} 패턴 우선 - 2026-08-02
+const parseScannedLot = (text) => {
+  const s = String(text ?? '').trim()
+  const m = s.match(/\/m\/lot\/([^/?#]+)/)
+  if (m) { try { return decodeURIComponent(m[1]) } catch { return m[1] } }
+  return s
+}
 
 const LOT_STATUSES = ['ALL', 'CREATED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD']
 const LOG_STATUSES = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED']
@@ -49,6 +63,8 @@ export default function LotTrackingPage() {
   const [logForm, setLogForm] = useState(initLogForm)
   const [editLog, setEditLog] = useState(null)
   const [saving,  setSaving]  = useState(false)
+
+  const [scanOpen, setScanOpen] = useState(false) // 앱 내장 QR 스캐너 - 2026-08-02
 
   const [products, setProducts] = useState([])
   const [empOpts,  setEmpOpts]  = useState([])
@@ -97,6 +113,15 @@ export default function LotTrackingPage() {
     setSelectedLot(lot)
     loadDetail(lot.lot_no)
   }
+
+  // QR 스캔 결과 처리 — LOT번호 추출 후 해당 LOT 검색·선택 - 2026-08-02
+  const handleScanDetected = useCallback((text) => {
+    const lotNo = parseScannedLot(text)
+    setScanOpen(false)
+    const f = { status: 'ALL', lot_no: lotNo }
+    setFilters(f)
+    handleSearch(f, true)
+  }, [handleSearch])
 
   const openEditLot = () => {
     setLotForm({ status: selectedLot.status, note: selectedLot.note ?? '' })
@@ -182,12 +207,19 @@ export default function LotTrackingPage() {
         {/* 헤더 + 필터 */}
         <div className="p-4 border-b border-theme shrink-0">
           <PageTitle title={t('lot.title')} />
-          <input
-            value={filters.lot_no}
-            onChange={e => setFilters(p => ({ ...p, lot_no: e.target.value }))}
-            placeholder="LOT번호 / 품목명 검색..."
-            className="mt-2 w-full text-sm bg-base border border-theme rounded-md px-2 py-1.5 text-primary"
-          />
+          <div className="mt-2 flex gap-1.5">
+            <input
+              value={filters.lot_no}
+              onChange={e => setFilters(p => ({ ...p, lot_no: e.target.value }))}
+              placeholder="LOT번호 / 품목명 검색..."
+              className="flex-1 min-w-0 text-sm bg-base border border-theme rounded-md px-2 py-1.5 text-primary"
+            />
+            {/* 앱 내장 QR 스캐너 열기 - 2026-08-02 */}
+            <button onClick={() => setScanOpen(true)} title="QR 스캔" aria-label="QR 스캔"
+              className="shrink-0 flex items-center justify-center w-9 rounded-md border border-theme text-muted hover-text-accent hover-bg-elevated transition-colors cursor-pointer">
+              <ScanLine size={16} />
+            </button>
+          </div>
           <div className="mt-2 flex gap-1 flex-wrap">
             {LOT_STATUSES.map(s => (
               <button key={s} onClick={() => setFilters(p => ({ ...p, status: s }))}
@@ -311,6 +343,9 @@ export default function LotTrackingPage() {
           <Field label="비고"><Textarea value={logForm.note} onChange={setLF('note')} /></Field>
         </div>
       </Modal>
+
+      {/* ── 앱 내장 QR 스캐너 ── */}
+      <QrScanner open={scanOpen} onClose={() => setScanOpen(false)} onDetected={handleScanDetected} />
     </div>
   )
 }
@@ -362,6 +397,17 @@ function LotListItem({ lot, selected, onClick, onDelete, t }) {
 function LotDetailPanel({ lot, logs, productions, inspections, canEdit, onEditLot, onEditLog, t }) {
   const reversedLogs = [...logs].sort((a, b) => b.sequence - a.sequence)
 
+  // 이 LOT의 공개 조회 URL을 QR 이미지로 생성 — 상세 헤더에 인라인 표시 - 2026-08-02
+  const [qrDataUrl, setQrDataUrl] = useState(null)
+  const lotUrl = lotPublicUrl(lot.lot_no)
+  useEffect(() => {
+    let cancelled = false
+    QRCodeLib.toDataURL(lotUrl, { width: 240, margin: 2 })
+      .then((d) => { if (!cancelled) setQrDataUrl(d) })
+      .catch(() => { if (!cancelled) setQrDataUrl(null) })
+    return () => { cancelled = true }
+  }, [lotUrl])
+
   const lastDoneLog = [...logs].sort((a,b) => b.sequence - a.sequence).find(l => l.good_qty != null)
   const yieldPct    = lastDoneLog && lot.planned_qty > 0
     ? ((lastDoneLog.good_qty / lot.planned_qty) * 100).toFixed(1)
@@ -402,17 +448,31 @@ function LotDetailPanel({ lot, logs, productions, inspections, canEdit, onEditLo
             )}
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 text-xs">
-          <HeaderInfo label="품번"     value={lot.product_code} />
-          <HeaderInfo label="품명"     value={lot.product_name} />
-          <HeaderInfo label="지시번호" value={lot.order_id} />
-          <HeaderInfo label="완료일"   value={lot.closed_at ?? '-'} />
-        </div>
-        <div className="mt-3 pt-3 grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 text-xs"
-          style={{ borderTop: '1px dashed var(--border)' }}>
-          <HeaderInfo label="수량"     value={`${lot.planned_qty} EA`} />
-          <HeaderInfo label="수율"     value={yieldPct != null ? `${yieldPct}%` : '-'} accent={yieldPct != null} />
-          <HeaderInfo label="생산기간" value={periodStr} />
+        <div className="mt-4 flex gap-4">
+          {/* 왼쪽: LOT 정보 그리드 */}
+          <div className="flex-1 min-w-0">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 text-xs">
+              <HeaderInfo label="품번"     value={lot.product_code} />
+              <HeaderInfo label="품명"     value={lot.product_name} />
+              <HeaderInfo label="지시번호" value={lot.order_id} />
+              <HeaderInfo label="완료일"   value={lot.closed_at ?? '-'} />
+            </div>
+            <div className="mt-3 pt-3 grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 text-xs"
+              style={{ borderTop: '1px dashed var(--border)' }}>
+              <HeaderInfo label="수량"     value={`${lot.planned_qty} EA`} />
+              <HeaderInfo label="수율"     value={yieldPct != null ? `${yieldPct}%` : '-'} accent={yieldPct != null} />
+              <HeaderInfo label="생산기간" value={periodStr} />
+            </div>
+          </div>
+          {/* 오른쪽: 모바일 조회 QR — 스캔 시 공개 LOT 조회 페이지로 이동 - 2026-08-02 */}
+          <div className="shrink-0 flex items-center">
+            {qrDataUrl ? (
+              <img src={qrDataUrl} alt={`${lot.lot_no} QR`} width={92} height={92}
+                className="rounded-lg border border-theme bg-white p-1.5" />
+            ) : (
+              <div className="w-23 h-23 rounded-lg border border-theme bg-elevated" />
+            )}
+          </div>
         </div>
         {lot.note && <div className="mt-3 text-xs text-muted">{lot.note}</div>}
       </div>

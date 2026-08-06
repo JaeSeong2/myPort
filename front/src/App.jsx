@@ -5,6 +5,7 @@ import { LanguageProvider } from './context/LanguageContext'
 import { AuthProvider }     from './context/AuthContext'
 import LoginPage from './pages/LoginPage'
 import MainPage from './pages/MainPage'
+import PublicLotPage from './pages/PublicLotPage'
 import PanelArea from './components/layout/PanelArea'
 
 export default function App() {
@@ -14,6 +15,8 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/" element={<LoginPage />} />
+          {/* QR 스캔 진입용 공개 LOT 조회(로그인 불필요) - 2026-08-02 */}
+          <Route path="/m/lot/:lotNo" element={<PublicLotPage />} />
           <Route path="/main" element={<MainPage />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="*" element={<PanelArea />} />
