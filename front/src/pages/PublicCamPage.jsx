@@ -18,77 +18,83 @@ export default function PublicCamPage() {
   const streamRef = useRef(null)
   const timerRef  = useRef(0)
 
-  const [camState, setCamState] = useState('starting') // starting | on | error
+  const [camState, setCamState] = useState('idle') // idle | starting | on | error
   const [errMsg,   setErrMsg]   = useState('')
   const [wsOpen,   setWsOpen]   = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
+  const connectWs = () => {
+    const ws = new WebSocket(wsUrl(`/api/cam/ws?room=${encodeURIComponent(room)}&role=pub`))
+    ws.binaryType = 'arraybuffer'
+    ws.onopen  = () => setWsOpen(true)
+    ws.onclose = () => setWsOpen(false)
+    ws.onerror = () => setWsOpen(false)
+    wsRef.current = ws
+  }
 
-    const startCamera = async () => {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setCamState('error'); setErrMsg('이 환경에서는 카메라를 쓸 수 없습니다. (HTTPS 필요)'); return
-      }
+  // 일정 주기로 현재 프레임을 캔버스에 그려 JPEG로 전송 - 2026-08-02
+  const startSending = () => {
+    clearInterval(timerRef.current)
+    const interval = Math.round(1000 / SEND_FPS)
+    timerRef.current = setInterval(() => {
+      const v = videoRef.current
+      const c = canvasRef.current
+      const ws = wsRef.current
+      if (!v || !c || !ws || ws.readyState !== WebSocket.OPEN) return
+      if (v.readyState < v.HAVE_CURRENT_DATA || !v.videoWidth) return
+      const ratio = v.videoHeight / v.videoWidth
+      c.width  = FRAME_WIDTH
+      c.height = Math.round(FRAME_WIDTH * ratio)
+      const ctx = c.getContext('2d')
+      ctx.drawImage(v, 0, 0, c.width, c.height)
+      c.toBlob((blob) => {
+        if (blob && ws.readyState === WebSocket.OPEN) {
+          blob.arrayBuffer().then((buf) => {
+            try { ws.send(buf) } catch { /* noop */ }
+          })
+        }
+      }, 'image/jpeg', 0.55)
+    }, interval)
+  }
+
+  // 카메라 시작 — 모바일(특히 iOS)은 사용자 탭(제스처)에서 호출해야 안정적 - 2026-08-07
+  const startCamera = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCamState('error'); setErrMsg('이 환경에서는 카메라를 쓸 수 없습니다. (HTTPS 또는 localhost 필요)'); return
+    }
+    setCamState('starting'); setErrMsg('')
+    // 후면 카메라 우선 → 실패하면 아무 카메라로 폴백 - 2026-08-07
+    let stream = null
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+    } catch {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } }, audio: false,
-        })
-        if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return }
-        streamRef.current = stream
-        const v = videoRef.current
-        v.srcObject = stream
-        v.setAttribute('playsinline', 'true')
-        await v.play()
-        setCamState('on')
-        connectWs()
-        startSending()
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
       } catch (e) {
         setCamState('error')
-        setErrMsg(e?.name === 'NotAllowedError' ? '카메라 권한이 거부되었습니다.' : '카메라를 시작할 수 없습니다.')
+        setErrMsg(e?.name === 'NotAllowedError'
+          ? '카메라 권한이 거부되었습니다. 브라우저 권한 설정에서 허용 후 다시 시도하세요.'
+          : `카메라를 시작할 수 없습니다. (${e?.name || ''} ${e?.message || ''})`)
+        return
       }
     }
+    streamRef.current = stream
+    const v = videoRef.current
+    v.srcObject = stream
+    v.setAttribute('playsinline', 'true')
+    try { await v.play() } catch { /* iOS에서 play 지연될 수 있으나 스트림은 유효 */ }
+    setCamState('on')
+    connectWs()
+    startSending()
+  }
 
-    const connectWs = () => {
-      const ws = new WebSocket(wsUrl(`/api/cam/ws?room=${encodeURIComponent(room)}&role=pub`))
-      ws.binaryType = 'arraybuffer'
-      ws.onopen  = () => setWsOpen(true)
-      ws.onclose = () => setWsOpen(false)
-      ws.onerror = () => setWsOpen(false)
-      wsRef.current = ws
-    }
-
-    // 일정 주기로 현재 프레임을 캔버스에 그려 JPEG로 전송 - 2026-08-02
-    const startSending = () => {
-      const interval = Math.round(1000 / SEND_FPS)
-      timerRef.current = setInterval(() => {
-        const v = videoRef.current
-        const c = canvasRef.current
-        const ws = wsRef.current
-        if (!v || !c || !ws || ws.readyState !== WebSocket.OPEN) return
-        if (v.readyState < v.HAVE_CURRENT_DATA || !v.videoWidth) return
-        const ratio = v.videoHeight / v.videoWidth
-        c.width  = FRAME_WIDTH
-        c.height = Math.round(FRAME_WIDTH * ratio)
-        const ctx = c.getContext('2d')
-        ctx.drawImage(v, 0, 0, c.width, c.height)
-        c.toBlob((blob) => {
-          if (blob && ws.readyState === WebSocket.OPEN) {
-            blob.arrayBuffer().then((buf) => {
-              try { ws.send(buf) } catch { /* noop */ }
-            })
-          }
-        }, 'image/jpeg', 0.55)
-      }, interval)
-    }
-
-    startCamera()
+  // 언마운트 시 카메라·WS·타이머 정리 - 2026-08-07
+  useEffect(() => {
     return () => {
-      cancelled = true
       clearInterval(timerRef.current)
       if (wsRef.current) { try { wsRef.current.close() } catch { /* noop */ } }
       if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop())
     }
-  }, [room])
+  }, [])
 
   return (
     <div className="min-h-screen bg-base">
@@ -113,15 +119,29 @@ export default function PublicCamPage() {
           <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
           <canvas ref={canvasRef} className="hidden" />
 
+          {camState === 'idle' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center text-white/90">
+              <Camera size={30} className="text-white/70" />
+              <button onClick={startCamera}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity cursor-pointer">
+                <Camera size={15} /> 카메라 시작
+              </button>
+              <span className="text-xs text-white/60">탭하면 카메라 권한을 요청합니다</span>
+            </div>
+          )}
           {camState === 'starting' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/90">
               <Loader2 size={22} className="animate-spin" /> <span className="text-xs">카메라 여는 중...</span>
             </div>
           )}
           {camState === 'error' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center text-white/90">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center text-white/90">
               <AlertTriangle size={24} className="text-amber-400" />
-              <span className="text-xs leading-relaxed">{errMsg}</span>
+              <span className="text-xs leading-relaxed wrap-break-word">{errMsg}</span>
+              <button onClick={startCamera}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity cursor-pointer">
+                다시 시도
+              </button>
             </div>
           )}
           {camState === 'on' && (

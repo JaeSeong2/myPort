@@ -9,7 +9,10 @@ export default defineConfig({
     'process.env': {},
   },
   server: {
+    host: true,            // LAN·터널에서 접근 허용(0.0.0.0 바인딩) - 2026-08-02
     port: 5173,
+    // 임시 HTTPS 터널 도메인(trycloudflare/ngrok/localtunnel 등) 허용 — 폰 카메라 테스트용 - 2026-08-02
+    allowedHosts: true,
     proxy: {
       // ws:true — WebSocket(카메라 릴레이) 업그레이드 요청도 백엔드로 프록시 - 2026-08-02
       '/api': { target: 'http://localhost:8000', ws: true },

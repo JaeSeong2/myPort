@@ -2,7 +2,7 @@
 // 폰(/m/cam)이 송출한 프레임을 받아 캔버스에 그리고, TensorFlow.js로 사물을 인식해 박스로 표시한다.
 import { useEffect, useRef, useState } from 'react'
 import QRCodeLib from 'qrcode'
-import { Camera, Wifi, WifiOff, Loader2, Cpu, AlertTriangle } from 'lucide-react'
+import { Camera, Wifi, WifiOff, Loader2, Cpu, AlertTriangle, Check, Ban } from 'lucide-react'
 import { wsUrl } from '../../../constants/api'
 
 const PUBLIC_BASE = import.meta.env.VITE_PUBLIC_BASE || window.location.origin
@@ -26,10 +26,14 @@ export default function VisionMonitorPage() {
   const predsRef = useRef([])
   const runningRef = useRef(true)
   const frameCntRef = useRef(0)
+  const hasFrameRef    = useRef(false)
+  const approvalRef    = useRef('none') // none | pending | allowed | blocked
 
-  const [pubOnline,  setPubOnline]  = useState(false)
+  const [approval,   setApprovalState] = useState('none')
+  const [pubOnline,  setPubOnline]     = useState(false)
   const [hasFrame,   setHasFrame]   = useState(false)
   const [modelState, setModelState] = useState('loading') // loading | ready | error
+  const [modelErr,   setModelErr]   = useState('')        // 로딩 실패 사유(진단용)
   const [preds,      setPreds]      = useState([])
   const [qrData,     setQrData]     = useState(null)
   const [fps,        setFps]        = useState(0)
@@ -47,26 +51,28 @@ export default function VisionMonitorPage() {
         const tf = await import('@tensorflow/tfjs')
         await tf.ready()
         const cocoSsd = await import('@tensorflow-models/coco-ssd')
-        const model = await cocoSsd.load({ base: 'lite_mobilenet_v2' })
+        // 모델을 로컬(public/models)에서 로드 — 외부 CDN 불필요, CSP('self') 통과, 오프라인 동작 - 2026-08-02
+        const model = await cocoSsd.load({ base: 'lite_mobilenet_v2', modelUrl: '/models/coco-ssd/model.json' })
         if (cancelled) return
         modelRef.current = model
         setModelState('ready')
-      } catch {
-        if (!cancelled) setModelState('error')
+      } catch (e) {
+        // 실제 원인을 콘솔·UI에 노출(모델 가중치 다운로드 실패/WebGL 문제 등) - 2026-08-02
+        console.error('[VisionMonitor] AI 모델 로딩 실패:', e)
+        if (!cancelled) { setModelErr(e?.message || String(e)); setModelState('error') }
       }
     })()
     return () => { cancelled = true }
   }, [])
 
-  // 캔버스에 프레임 + 감지 박스 그리기 - 2026-08-02
-  const drawFrame = (bmp) => {
+  // 캔버스에 프레임(ImageBitmap 또는 video/canvas) + 감지 박스 그리기 - 2026-08-02
+  const paint = (src, w, h) => {
     const raw = rawRef.current, view = viewRef.current
-    if (!raw || !view) return
-    const w = bmp.width, h = bmp.height
+    if (!raw || !view || !w || !h) return
     if (raw.width !== w)  { raw.width = w; raw.height = h; view.width = w; view.height = h }
-    raw.getContext('2d').drawImage(bmp, 0, 0, w, h)
+    raw.getContext('2d').drawImage(src, 0, 0, w, h)
     const ctx = view.getContext('2d')
-    ctx.drawImage(bmp, 0, 0, w, h)
+    ctx.drawImage(src, 0, 0, w, h)
     // 박스 오버레이
     ctx.lineWidth = 2
     ctx.font = '14px sans-serif'
@@ -85,6 +91,22 @@ export default function VisionMonitorPage() {
     }
   }
 
+  // 첫 프레임 도착 시 1회만 대기 오버레이 해제 - 2026-08-02
+  const markFrame = () => { if (!hasFrameRef.current) { hasFrameRef.current = true; setHasFrame(true) } }
+
+  // 허용/차단 상태를 ref+state 동시 갱신(비동기 onmessage에서 최신값 참조) - 2026-08-07
+  const setApproval = (v) => { approvalRef.current = v; setApprovalState(v) }
+
+  // 스트림 표시 초기화 — 캔버스·감지결과·프레임 플래그 리셋 - 2026-08-07
+  const resetStream = () => {
+    hasFrameRef.current = false
+    setHasFrame(false)
+    predsRef.current = []
+    setPreds([])
+    const view = viewRef.current
+    if (view) view.getContext('2d')?.clearRect(0, 0, view.width, view.height)
+  }
+
   // WebSocket 수신 + 감지 루프 - 2026-08-02
   useEffect(() => {
     runningRef.current = true
@@ -94,15 +116,24 @@ export default function VisionMonitorPage() {
 
     ws.onmessage = async (e) => {
       if (typeof e.data === 'string') {
-        try { const m = JSON.parse(e.data); if (m.type === 'pub') setPubOnline(!!m.online) } catch { /* noop */ }
+        try {
+          const m = JSON.parse(e.data)
+          if (m.type === 'pub') {
+            setPubOnline(!!m.online)
+            // 새 송출자 연결 → 이미 허용 상태가 아니면 승인 대기. 연결 종료 → 초기화 - 2026-08-07
+            if (m.online) { if (approvalRef.current !== 'allowed') setApproval('pending') }
+            else { setApproval('none'); resetStream() }
+          }
+        } catch { /* noop */ }
         return
       }
       try {
+        if (approvalRef.current !== 'allowed') return   // 허용 전에는 프레임 무시
         const bmp = await createImageBitmap(new Blob([e.data], { type: 'image/jpeg' }))
         if (!runningRef.current) return
-        if (!hasFrame) setHasFrame(true)
+        markFrame()
         frameCntRef.current += 1
-        drawFrame(bmp)
+        paint(bmp, bmp.width, bmp.height)
         bmp.close?.()
       } catch { /* 디코드 실패 무시 */ }
     }
@@ -154,7 +185,7 @@ export default function VisionMonitorPage() {
           <span className="ml-auto flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-theme"
             style={{ color: pubOnline ? '#34d399' : '#9ca3af' }}>
             {pubOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
-            {pubOnline ? '카메라 연결됨' : '카메라 대기'}
+            {pubOnline ? '폰 카메라 연결됨' : '카메라 대기'}
           </span>
           <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-theme text-muted">
             <Cpu size={12} />
@@ -168,27 +199,68 @@ export default function VisionMonitorPage() {
           <canvas ref={rawRef} className="hidden" />
 
           {!hasFrame && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/80 px-6 text-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/80 px-6 text-center">
               {modelState === 'error' ? (
                 <>
                   <AlertTriangle size={26} className="text-amber-400" />
                   <span className="text-sm">AI 모델 로딩 실패 (네트워크 확인)</span>
+                  {modelErr && (
+                    <span className="text-xs text-white/60 max-w-xs wrap-break-word">사유: {modelErr}</span>
+                  )}
+                </>
+              ) : approval === 'pending' ? (
+                <>
+                  {/* 폰 카메라 연결 요청 — PC에서 허용/차단 - 2026-08-07 */}
+                  <Camera size={28} className="text-white/80" />
+                  <span className="text-sm">폰 카메라 연결 요청</span>
+                  <span className="text-xs text-white/60">이 카메라 영상을 표시할까요?</span>
+                  <div className="flex gap-2 mt-1">
+                    <button onClick={() => setApproval('allowed')}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity cursor-pointer">
+                      <Check size={15} /> 허용
+                    </button>
+                    <button onClick={() => { setApproval('blocked'); resetStream() }}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-black/50 text-white border border-white/25 hover:bg-black/70 transition-colors cursor-pointer">
+                      <Ban size={15} /> 차단
+                    </button>
+                  </div>
+                </>
+              ) : approval === 'blocked' ? (
+                <>
+                  <Ban size={26} className="text-white/60" />
+                  <span className="text-sm">차단됨</span>
+                  <button onClick={() => setApproval('allowed')}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity cursor-pointer">
+                    <Check size={15} /> 허용으로 변경
+                  </button>
                 </>
               ) : (
                 <>
-                  <Loader2 size={22} className="animate-spin" />
+                  <Camera size={28} className="text-white/70" />
                   <span className="text-sm">폰 카메라 연결 대기 중...</span>
                   <span className="text-xs text-white/60">우측 QR을 폰으로 스캔해 카메라를 켜세요</span>
+                  {modelState !== 'ready' && (
+                    <span className="text-xs text-white/50 flex items-center gap-1">
+                      <Loader2 size={11} className="animate-spin" /> AI 모델 로딩 중...
+                    </span>
+                  )}
                 </>
               )}
             </div>
           )}
 
           {hasFrame && (
-            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-semibold text-white flex items-center gap-1"
-              style={{ background: 'rgba(239,68,68,0.85)' }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
-            </span>
+            <>
+              <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-semibold text-white flex items-center gap-1"
+                style={{ background: 'rgba(239,68,68,0.85)' }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
+              </span>
+              {/* 송출 중에도 차단 가능 - 2026-08-07 */}
+              <button onClick={() => { setApproval('blocked'); resetStream() }}
+                className="absolute top-2 right-2 px-2.5 py-1 rounded-lg text-xs font-medium bg-black/60 text-white border border-white/25 hover:bg-black/80 transition-colors cursor-pointer flex items-center gap-1">
+                <Ban size={12} /> 차단
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -205,10 +277,7 @@ export default function VisionMonitorPage() {
             ) : (
               <div className="w-40 h-40 rounded-lg border border-theme bg-elevated" />
             )}
-            <p className="text-xs text-muted text-center leading-relaxed">
-              폰으로 QR을 스캔하면 카메라 송출 화면이 열립니다.<br />
-              <span className="text-amber-400">HTTPS 또는 localhost</span>에서만 카메라가 동작합니다.
-            </p>
+            
           </div>
         </div>
 
