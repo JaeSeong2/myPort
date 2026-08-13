@@ -5,6 +5,7 @@ import { X, Columns2, XSquare, Bookmark } from 'lucide-react'
 import { menuConfig } from '../../data/menuConfig'
 import { pageRegistry } from '../../data/pageRegistry'
 import { usePanelContext } from '../../context/PanelContext'
+import { useLanguage } from '../../context/LanguageContext'
 import { useIsMobile } from '../../hooks/useBreakpoint'
 import DashboardPage from '../../pages/modules/dashboard/DashboardPage'
 
@@ -12,6 +13,15 @@ import DashboardPage from '../../pages/modules/dashboard/DashboardPage'
  * 메인 콘텐츠 영역 - 좌우 2패널 분할, 탭 드래그 정렬 및 패널 간 이동, 드래그 리사이즈
  * @date 2026-05-23
  */
+// 경로 → 로케일 키 맵 — 패널 탭 라벨을 현재 언어로 재해석하기 위함 - 2026-08-13
+const LABEL_KEY_BY_PATH = {}
+;(function collect(items) {
+  items?.forEach((it) => {
+    if (it.path && it.labelKey) LABEL_KEY_BY_PATH[it.path] = it.labelKey
+    if (it.children) collect(it.children)
+  })
+})(menuConfig)
+
 export default function PanelArea() {
   // 태블릿 이하(<1024)는 분할 없이 단일 패널로 강제 — 좁은 폭에서 좌우 분할 방지 - 2026-07-28
   const isTabletDown = useIsMobile(1024)
@@ -196,6 +206,7 @@ export default function PanelArea() {
  * @date 2026-05-23
  */
 function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTabClose, onReorder, onTogglePin, onCrossMove, onClose, onSplit, onCloseAll }) {
+  const { t } = useLanguage()
   const [dragOverIdx, setDragOverIdx] = useState(null)
   const [dragOverBar, setDragOverBar] = useState(false)
 
@@ -279,11 +290,11 @@ function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTab
             `}
             style={{ opacity: sharedDrag.current?.path === tab.path ? 0.4 : 1 }}
           >
-            {tab.label}
+            {LABEL_KEY_BY_PATH[tab.path] ? t(LABEL_KEY_BY_PATH[tab.path]) : tab.label}
             {/* 탭 고정/해제 토글 — 고정 시 accent 색 채움 - 2026-07-24 */}
             <button
               onMouseDown={(e) => { e.stopPropagation(); onTogglePin?.(tab.path) }}
-              title={tab.pinned ? '고정 해제' : '탭 고정'}
+              title={tab.pinned ? t('panel.pinOff') : t('panel.pin')}
               className={`transition-colors cursor-pointer rounded p-0.5 ${tab.pinned ? '' : 'text-muted hover-text-primary'}`}
               style={tab.pinned ? { color: 'rgba(251,191,36,0.5)' } : undefined}
             >
@@ -305,7 +316,7 @@ function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTab
       {onCloseAll && (
         <button
           onClick={onCloseAll}
-          title="고정 제외 모두 닫기"
+          title={t('panel.closeAll')}
           className="p-1.5 rounded-md text-muted hover-text-danger hover-bg-elevated transition-colors shrink-0 cursor-pointer"
         >
           <XSquare size={15} />
@@ -314,7 +325,7 @@ function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTab
       {onSplit && (
         <button
           onClick={onSplit}
-          title="화면 분할"
+          title={t('panel.split')}
           className="p-1.5 rounded-md text-muted hover-text-primary hover-bg-elevated transition-colors shrink-0 cursor-pointer"
         >
           <Columns2 size={15} />
@@ -323,7 +334,7 @@ function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTab
       {onClose && (
         <button
           onMouseDown={(e) => { e.stopPropagation(); onClose() }}
-          title="분할 닫기"
+          title={t('panel.splitClose')}
           className="p-1 rounded-md text-muted hover-text-danger transition-colors cursor-pointer shrink-0"
         >
           <X size={14} />

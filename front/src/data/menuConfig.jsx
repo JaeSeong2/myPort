@@ -71,7 +71,7 @@ export const menuConfig = [
   },
   {
     // AI 비전 관제 — 폰 카메라 실시간 영상 + 객체 감지 - 2026-08-02
-    id: 'vision-monitor', label: 'AI 비전 관제',
+    id: 'vision-monitor', labelKey: 'vm.title', label: 'AI 비전 관제',
     icon: ScanEye, path: '/main/monitor/vision',
   },
   {

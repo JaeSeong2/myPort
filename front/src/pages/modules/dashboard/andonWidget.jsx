@@ -2,6 +2,7 @@
 // RealtimeContext의 단일 스트림을 구독하여 8초 주기로 자동 갱신된다.
 import { Activity } from 'lucide-react'
 import { useRealtime } from '../../../context/RealtimeContext'
+import { useLanguage } from '../../../context/LanguageContext'
 
 // 설비 상태별 색상(가동=녹색, 대기=회색, 정비=주황, 고장=빨강) - 2026-08-02
 const STATUS_STYLE = {
@@ -12,14 +13,15 @@ const STATUS_STYLE = {
 }
 
 const SUMMARY_ITEMS = [
-  { key: 'RUNNING',     label: '가동' },
-  { key: 'IDLE',        label: '대기' },
-  { key: 'MAINTENANCE', label: '정비' },
-  { key: 'BREAKDOWN',   label: '고장' },
+  { key: 'RUNNING' },
+  { key: 'IDLE' },
+  { key: 'MAINTENANCE' },
+  { key: 'BREAKDOWN' },
 ]
 
 export function AndonContent() {
   const { andon, connected } = useRealtime()
+  const { t } = useLanguage()
   const summary = andon?.summary ?? {}
   const lines   = andon?.lines ?? []
 
@@ -29,25 +31,25 @@ export function AndonContent() {
       <div className="flex items-center justify-between mb-3 shrink-0">
         <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
           <Activity size={15} className="text-emerald-400" />
-          실시간 라인 현황 (Andon)
+          {t('andon.title')}
         </h3>
         <span className="flex items-center gap-1.5 text-xs" style={{ color: connected ? '#34d399' : '#9ca3af' }}>
           <span
             className={`w-2 h-2 rounded-full ${connected ? 'animate-pulse' : ''}`}
             style={{ background: connected ? '#34d399' : '#9ca3af' }}
           />
-          {connected ? 'LIVE' : '연결 중'}
+          {connected ? t('andon.live') : t('andon.connecting')}
         </span>
       </div>
 
       {/* 상태 요약 */}
       <div className="grid grid-cols-4 gap-2 mb-3 shrink-0">
-        {SUMMARY_ITEMS.map(({ key, label }) => {
+        {SUMMARY_ITEMS.map(({ key }) => {
           const s = STATUS_STYLE[key]
           return (
             <div key={key} className="rounded-lg px-2 py-2 text-center" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
               <div className="text-lg font-bold" style={{ color: s.text }}>{summary[key] ?? 0}</div>
-              <div className="text-xs text-muted">{label}</div>
+              <div className="text-xs text-muted">{t(`andon.st.${key}`)}</div>
             </div>
           )
         })}
@@ -57,7 +59,7 @@ export function AndonContent() {
       <div className="flex-1 min-h-0 overflow-y-auto">
         {lines.length === 0 ? (
           <div className="h-full flex items-center justify-center text-muted text-sm">
-            {connected ? '등록된 설비가 없습니다' : '실시간 데이터 로딩 중...'}
+            {connected ? t('andon.noEq') : t('andon.loadingData')}
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -79,7 +81,7 @@ export function AndonContent() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted truncate">{eq.name}</span>
-                    <span className="text-xs font-semibold shrink-0" style={{ color: s.text }}>{eq.label}</span>
+                    <span className="text-xs font-semibold shrink-0" style={{ color: s.text }}>{t(`andon.st.${eq.status}`)}</span>
                   </div>
                 </div>
               )

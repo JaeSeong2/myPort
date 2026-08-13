@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ClipboardList, Factory, Wrench, AlertTriangle } from 'lucide-react'
 import { API_BASE } from '../../../constants/api'
 import { useAuth } from '../../../context/AuthContext'
+import { useLanguage } from '../../../context/LanguageContext'
 
 const WO_API   = `${API_BASE}/api/work-orders`
 const PROD_API = `${API_BASE}/api/productions`
@@ -15,26 +16,29 @@ const fmtDate = (d) => {
   return `${y}-${m}-${day}`
 }
 
+// 상태 코드 → 색상 + 로케일 키(라벨) - 2026-08-13
 const STATUS_STYLE = {
-  PENDING:   { label: '대기',   cls: 'bg-yellow-400/15 text-yellow-400' },
-  IN_PROG:   { label: '진행중', cls: 'bg-blue-400/15 text-blue-400'   },
-  DONE:      { label: '완료',   cls: 'bg-emerald-400/15 text-emerald-400' },
-  STOPPED:   { label: '중단',   cls: 'bg-red-400/15 text-red-400'     },
-  ONGOING:   { label: '진행중', cls: 'bg-blue-400/15 text-blue-400'   },
-  COMPLETED: { label: '완료',   cls: 'bg-emerald-400/15 text-emerald-400' },
+  PENDING:   { labelKey: 'opt.status.PENDING', cls: 'bg-yellow-400/15 text-yellow-400' },
+  IN_PROG:   { labelKey: 'opt.status.IN_PROG', cls: 'bg-blue-400/15 text-blue-400'   },
+  DONE:      { labelKey: 'opt.status.DONE',    cls: 'bg-emerald-400/15 text-emerald-400' },
+  STOPPED:   { labelKey: 'opt.status.STOPPED', cls: 'bg-red-400/15 text-red-400'     },
+  ONGOING:   { labelKey: 'opt.prod.ONGOING',   cls: 'bg-blue-400/15 text-blue-400'   },
+  COMPLETED: { labelKey: 'opt.prod.COMPLETED', cls: 'bg-emerald-400/15 text-emerald-400' },
 }
 
 function StatusBadge({ status }) {
-  const s = STATUS_STYLE[status] ?? { label: status, cls: 'bg-gray-400/15 text-gray-400' }
+  const { t } = useLanguage()
+  const s = STATUS_STYLE[status]
   return (
-    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${s.cls}`}>
-      {s.label}
+    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${s?.cls ?? 'bg-gray-400/15 text-gray-400'}`}>
+      {s ? t(s.labelKey) : status}
     </span>
   )
 }
 
 export default function DashboardWorker() {
   const { currentUser } = useAuth()
+  const { t } = useLanguage()
   const workerCode = currentUser?.worker_code ?? ''
 
   const [myWO,      setMyWO]      = useState([])
@@ -85,8 +89,8 @@ export default function DashboardWorker() {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-3 text-muted">
         <AlertTriangle size={32} className="opacity-40" />
-        <p className="text-sm">담당 작업자 코드가 설정되지 않았습니다.</p>
-        <p className="text-xs opacity-60">관리자에게 worker_code 등록을 요청하세요.</p>
+        <p className="text-sm">{t('dw.noWorker')}</p>
+        <p className="text-xs opacity-60">{t('dw.noWorkerHint')}</p>
       </div>
     )
   }
@@ -94,16 +98,16 @@ export default function DashboardWorker() {
   const todayDefect = myProd.reduce((s, p) => s + (p.defect_qty ?? 0), 0)
 
   const SUMMARY_CARDS = [
-    { icon: <ClipboardList size={18} />, label: '배정된 작업지시', value: loading ? '—' : myWO.length,      unit: '건', color: '#60a5fa' },
-    { icon: <Factory size={18} />,       label: '오늘 생산실적',   value: loading ? '—' : myProd.length,    unit: '건', color: '#34d399' },
-    { icon: <AlertTriangle size={18} />, label: '오늘 불량수량',   value: loading ? '—' : todayDefect,      unit: 'EA', color: '#f87171' },
+    { icon: <ClipboardList size={18} />, label: t('dw.assignedWo'), value: loading ? '—' : myWO.length,   unit: t('dash.unit.cases'), color: '#60a5fa' },
+    { icon: <Factory size={18} />,       label: t('dw.todayProd'),  value: loading ? '—' : myProd.length, unit: t('dash.unit.cases'), color: '#34d399' },
+    { icon: <AlertTriangle size={18} />, label: t('dw.todayDefect'), value: loading ? '—' : todayDefect,  unit: t('dw.unitEa'),       color: '#f87171' },
   ]
 
   return (
     <div className="flex flex-col gap-6">
       {/* 헤더 */}
       <div>
-        <h2 className="text-primary text-lg font-semibold">오늘의 작업 현황</h2>
+        <h2 className="text-primary text-lg font-semibold">{t('dw.title')}</h2>
         <p className="text-xs text-muted mt-0.5">{currentUser?.name} · {workerCode}</p>
       </div>
 
@@ -125,11 +129,11 @@ export default function DashboardWorker() {
 
       {/* 내 작업지시 */}
       <div className="bg-surface border border-theme rounded-xl p-4">
-        <h3 className="text-sm font-semibold text-primary mb-3">내 작업지시</h3>
+        <h3 className="text-sm font-semibold text-primary mb-3">{t('dw.myWo')}</h3>
         {loading ? (
-          <p className="text-xs text-muted py-4 text-center">로딩 중...</p>
+          <p className="text-xs text-muted py-4 text-center">{t('msg.loading')}</p>
         ) : myWO.length === 0 ? (
-          <p className="text-xs text-muted py-4 text-center">배정된 작업지시가 없습니다.</p>
+          <p className="text-xs text-muted py-4 text-center">{t('dw.noWo')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {myWO.map((w, i) => (
@@ -151,11 +155,11 @@ export default function DashboardWorker() {
 
       {/* 오늘 생산실적 */}
       <div className="bg-surface border border-theme rounded-xl p-4">
-        <h3 className="text-sm font-semibold text-primary mb-3">오늘 생산실적</h3>
+        <h3 className="text-sm font-semibold text-primary mb-3">{t('dw.myProdToday')}</h3>
         {loading ? (
-          <p className="text-xs text-muted py-4 text-center">로딩 중...</p>
+          <p className="text-xs text-muted py-4 text-center">{t('msg.loading')}</p>
         ) : myProd.length === 0 ? (
-          <p className="text-xs text-muted py-4 text-center">오늘 입력된 생산실적이 없습니다.</p>
+          <p className="text-xs text-muted py-4 text-center">{t('dw.noProd')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {myProd.map((p, i) => (
@@ -165,9 +169,9 @@ export default function DashboardWorker() {
                   <span className="text-xs text-muted">{p.product_name}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-muted">실적 <strong className="text-primary">{p.actual_qty}</strong></span>
+                  <span className="text-xs text-muted">{t('dw.actual')} <strong className="text-primary">{p.actual_qty}</strong></span>
                   {p.defect_qty > 0 && (
-                    <span className="text-xs text-red-400">불량 {p.defect_qty}</span>
+                    <span className="text-xs text-red-400">{t('dw.defect')} {p.defect_qty}</span>
                   )}
                   <StatusBadge status={p.status} />
                 </div>
@@ -181,20 +185,20 @@ export default function DashboardWorker() {
       <div className="bg-surface border border-theme rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <Wrench size={14} className="text-muted" />
-          <h3 className="text-sm font-semibold text-primary">설비 현황</h3>
+          <h3 className="text-sm font-semibold text-primary">{t('dw.eqStatus')}</h3>
         </div>
         <div className="flex gap-4">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
-            <span className="text-xs text-muted">가동 <strong className="text-primary">{eqSummary.running}</strong>대</span>
+            <span className="text-xs text-muted">{t('dw.running')} <strong className="text-primary">{eqSummary.running}</strong> {t('dash.unit.machines')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
-            <span className="text-xs text-muted">고장 <strong className="text-primary">{eqSummary.breakdown}</strong>대</span>
+            <span className="text-xs text-muted">{t('dw.breakdown')} <strong className="text-primary">{eqSummary.breakdown}</strong> {t('dash.unit.machines')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />
-            <span className="text-xs text-muted">점검 <strong className="text-primary">{eqSummary.maintenance}</strong>대</span>
+            <span className="text-xs text-muted">{t('dw.maint')} <strong className="text-primary">{eqSummary.maintenance}</strong> {t('dash.unit.machines')}</span>
           </div>
         </div>
       </div>

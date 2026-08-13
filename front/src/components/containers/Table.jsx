@@ -2,8 +2,11 @@
 // 컬럼 헤더 클릭 정렬(오름차순 → 내림차순 → 해제) 추가 - 2026-07-24
 import { useState, useMemo } from 'react'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import { useLanguage } from '../../context/LanguageContext'
 
-export default function Table({ columns, data = [], loading = false, emptyText = '데이터가 없습니다.', onRowDoubleClick }) {
+export default function Table({ columns, data = [], loading = false, emptyText, onRowDoubleClick }) {
+  const { t } = useLanguage()
+  const empty = emptyText ?? t('msg.noData') // 미지정 시 로케일 기본값 - 2026-08-13
   const [sort, setSort] = useState({ key: null, dir: null }) // dir: 'asc' | 'desc' | null
 
   // 정렬 가능 여부 — 명시값(col.sortable) 우선, 미지정 시 실제 데이터 값이 있는 컬럼만 자동 허용
@@ -68,7 +71,7 @@ export default function Table({ columns, data = [], loading = false, emptyText =
                       type="button"
                       onClick={() => handleSort(col.key)}
                       className="flex items-center gap-1 max-w-full hover-text-primary transition-colors cursor-pointer select-none"
-                      title="정렬"
+                      title={t('ui.sort')}
                     >
                       <span className="truncate">{col.label}</span>
                       <SortIcon col={col} />
@@ -94,7 +97,7 @@ export default function Table({ columns, data = [], loading = false, emptyText =
             ) : rows.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-12 text-center text-muted text-sm">
-                  {emptyText}
+                  {empty}
                 </td>
               </tr>
             ) : (

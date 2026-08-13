@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import QRCodeLib from 'qrcode'
 import { Camera, Wifi, WifiOff, Loader2, Cpu, AlertTriangle, Check, Ban } from 'lucide-react'
 import { wsUrl } from '../../../constants/api'
+import { useLanguage } from '../../../context/LanguageContext'
 
 const PUBLIC_BASE = import.meta.env.VITE_PUBLIC_BASE || window.location.origin
 const camUrl = (room) => `${PUBLIC_BASE}/#/m/cam?room=${encodeURIComponent(room)}`
@@ -17,6 +18,7 @@ const colorFor = (cls) => {
 }
 
 export default function VisionMonitorPage() {
+  const { t } = useLanguage()
   const room = 'default'
 
   const viewRef  = useRef(null)   // 화면 표시 캔버스(영상 + 박스)
@@ -179,17 +181,17 @@ export default function VisionMonitorPage() {
       <div className="flex-1 min-w-0 flex flex-col">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-primary font-semibold flex items-center gap-1.5">
-            <Camera size={17} className="text-accent" /> AI 비전 관제
+            <Camera size={17} className="text-accent" /> {t('vm.title')}
           </h2>
           {/* 상태 배지들 */}
           <span className="ml-auto flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-theme"
             style={{ color: pubOnline ? '#34d399' : '#9ca3af' }}>
             {pubOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
-            {pubOnline ? '폰 카메라 연결됨' : '카메라 대기'}
+            {pubOnline ? t('vm.phoneConnected') : t('vm.camWait')}
           </span>
           <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-theme text-muted">
             <Cpu size={12} />
-            {modelState === 'ready' ? 'AI 준비됨' : modelState === 'error' ? 'AI 오류' : 'AI 로딩중'}
+            {modelState === 'ready' ? t('vm.aiReady') : modelState === 'error' ? t('vm.aiError') : t('vm.aiLoading')}
           </span>
           {hasFrame && <span className="text-xs text-muted">{fps} fps</span>}
         </div>
@@ -203,45 +205,45 @@ export default function VisionMonitorPage() {
               {modelState === 'error' ? (
                 <>
                   <AlertTriangle size={26} className="text-amber-400" />
-                  <span className="text-sm">AI 모델 로딩 실패 (네트워크 확인)</span>
+                  <span className="text-sm">{t('vm.modelFail')}</span>
                   {modelErr && (
-                    <span className="text-xs text-white/60 max-w-xs wrap-break-word">사유: {modelErr}</span>
+                    <span className="text-xs text-white/60 max-w-xs wrap-break-word">{t('vm.reason')}: {modelErr}</span>
                   )}
                 </>
               ) : approval === 'pending' ? (
                 <>
                   {/* 폰 카메라 연결 요청 — PC에서 허용/차단 - 2026-08-07 */}
                   <Camera size={28} className="text-white/80" />
-                  <span className="text-sm">폰 카메라 연결 요청</span>
-                  <span className="text-xs text-white/60">이 카메라 영상을 표시할까요?</span>
+                  <span className="text-sm">{t('vm.connectReq')}</span>
+                  <span className="text-xs text-white/60">{t('vm.showThis')}</span>
                   <div className="flex gap-2 mt-1">
                     <button onClick={() => setApproval('allowed')}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity cursor-pointer">
-                      <Check size={15} /> 허용
+                      <Check size={15} /> {t('vm.allow')}
                     </button>
                     <button onClick={() => { setApproval('blocked'); resetStream() }}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-black/50 text-white border border-white/25 hover:bg-black/70 transition-colors cursor-pointer">
-                      <Ban size={15} /> 차단
+                      <Ban size={15} /> {t('vm.block')}
                     </button>
                   </div>
                 </>
               ) : approval === 'blocked' ? (
                 <>
                   <Ban size={26} className="text-white/60" />
-                  <span className="text-sm">차단됨</span>
+                  <span className="text-sm">{t('vm.blocked')}</span>
                   <button onClick={() => setApproval('allowed')}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity cursor-pointer">
-                    <Check size={15} /> 허용으로 변경
+                    <Check size={15} /> {t('vm.changeAllow')}
                   </button>
                 </>
               ) : (
                 <>
                   <Camera size={28} className="text-white/70" />
-                  <span className="text-sm">폰 카메라 연결 대기 중...</span>
-                  <span className="text-xs text-white/60">우측 QR을 폰으로 스캔해 카메라를 켜세요</span>
+                  <span className="text-sm">{t('vm.waiting')}</span>
+                  <span className="text-xs text-white/60">{t('vm.scanHint')}</span>
                   {modelState !== 'ready' && (
                     <span className="text-xs text-white/50 flex items-center gap-1">
-                      <Loader2 size={11} className="animate-spin" /> AI 모델 로딩 중...
+                      <Loader2 size={11} className="animate-spin" /> {t('vm.modelLoading')}
                     </span>
                   )}
                 </>
@@ -258,7 +260,7 @@ export default function VisionMonitorPage() {
               {/* 송출 중에도 차단 가능 - 2026-08-07 */}
               <button onClick={() => { setApproval('blocked'); resetStream() }}
                 className="absolute top-2 right-2 px-2.5 py-1 rounded-lg text-xs font-medium bg-black/60 text-white border border-white/25 hover:bg-black/80 transition-colors cursor-pointer flex items-center gap-1">
-                <Ban size={12} /> 차단
+                <Ban size={12} /> {t('vm.block')}
               </button>
             </>
           )}
@@ -269,10 +271,10 @@ export default function VisionMonitorPage() {
       <aside className="w-full lg:w-72 shrink-0 flex flex-col gap-4">
         {/* 폰 연결 QR */}
         <div className="bg-surface border border-theme rounded-2xl p-4">
-          <h3 className="text-sm font-semibold text-primary mb-3">폰 카메라 연결</h3>
+          <h3 className="text-sm font-semibold text-primary mb-3">{t('vm.phoneConn')}</h3>
           <div className="flex flex-col items-center gap-2">
             {qrData ? (
-              <img src={qrData} alt="카메라 연결 QR" width={160} height={160}
+              <img src={qrData} alt={t('vm.qrAlt')} width={160} height={160}
                 className="rounded-lg border border-theme bg-white p-2" />
             ) : (
               <div className="w-40 h-40 rounded-lg border border-theme bg-elevated" />
@@ -284,12 +286,12 @@ export default function VisionMonitorPage() {
         {/* 감지 결과 */}
         <div className="bg-surface border border-theme rounded-2xl p-4 flex-1 min-h-0 flex flex-col">
           <h3 className="text-sm font-semibold text-primary mb-3 flex items-center gap-1.5">
-            <Cpu size={14} className="text-accent" /> 인식된 사물
-            <span className="ml-auto text-xs font-normal text-muted">{preds.length}개</span>
+            <Cpu size={14} className="text-accent" /> {t('vm.recognized')}
+            <span className="ml-auto text-xs font-normal text-muted">{t('vm.count').replace('{n}', preds.length)}</span>
           </h3>
           {summary.length === 0 ? (
             <p className="text-xs text-muted text-center py-6">
-              {hasFrame ? '인식된 사물이 없습니다.' : '영상 수신 대기 중...'}
+              {hasFrame ? t('vm.noObj') : t('vm.waitFrame')}
             </p>
           ) : (
             <div className="flex flex-col gap-1.5 overflow-y-auto">
@@ -305,7 +307,7 @@ export default function VisionMonitorPage() {
             </div>
           )}
           <p className="text-xs text-muted mt-3 pt-3 border-t border-theme leading-relaxed">
-            일반 사물 80종 인식(COCO-SSD). 제품·불량 등 현장 특화 인식은 커스텀 학습 모델이 필요합니다.
+            {t('vm.footer')}
           </p>
         </div>
       </aside>

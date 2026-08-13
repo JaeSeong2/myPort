@@ -5,6 +5,7 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import { GripVertical, EyeOff, SlidersHorizontal, Check } from 'lucide-react'
 import { useIsMobile } from '../../hooks/useBreakpoint'
+import { useLanguage } from '../../context/LanguageContext'
 
 const accentTint = (pct) => `color-mix(in srgb, var(--accent) ${pct}%, transparent)`
 
@@ -12,12 +13,12 @@ const GRID = { cols: 12, rowHeight: 30, margin: [12, 12], containerPadding: [12,
 
 // 편집 진입/종료 버튼 - 2026-07-25
 // 편집 토글 버튼(아이콘) — 오른쪽 사이드바에 배치 - 2026-07-25
-function EditToggle({ editMode, setEditMode }) {
+function EditToggle({ editMode, setEditMode, t }) {
   return (
     <button
       onClick={() => setEditMode((v) => !v)}
-      title={editMode ? '편집 완료' : '위젯 편집'}
-      aria-label={editMode ? '편집 완료' : '위젯 편집'}
+      title={editMode ? t('widget.editDone') : t('widget.edit')}
+      aria-label={editMode ? t('widget.editDone') : t('widget.edit')}
       className="flex items-center justify-center w-9 h-9 rounded-xl transition-all active:scale-95"
       style={editMode
         ? { background: 'color-mix(in srgb, #34d399 15%, transparent)', color: '#34d399', border: '1px solid color-mix(in srgb, #34d399 35%, transparent)' }
@@ -32,12 +33,13 @@ function EditToggle({ editMode, setEditMode }) {
 
 // '위젯 추가' 팔레트 — 아이콘 전용, 오른쪽 사이드바에 세로 정렬 - 2026-07-25
 // 클릭하면 맨 아래에 추가, 드래그하면 그리드의 원하는 위치에 드롭해 배치 - 2026-07-25
-function Palette({ hiddenWidgets, addWidget, iconOf, onDragWidgetStart, onDragWidgetEnd }) {
+function Palette({ hiddenWidgets, addWidget, iconOf, onDragWidgetStart, onDragWidgetEnd, t }) {
   if (hiddenWidgets.length === 0) return null
   return (
     <div className="flex flex-col items-center gap-2 w-full pt-3 mt-1 border-t border-theme">
       {hiddenWidgets.map((w) => {
         const Icon = iconOf(w.id)
+        const label = t(w.labelKey)
         return (
           <button key={w.id} onClick={() => addWidget(w.id)}
             draggable
@@ -47,7 +49,7 @@ function Palette({ hiddenWidgets, addWidget, iconOf, onDragWidgetStart, onDragWi
               onDragWidgetStart(w)
             }}
             onDragEnd={onDragWidgetEnd}
-            title={`${w.label} (클릭: 추가 · 드래그: 위치 지정)`} aria-label={w.label}
+            title={`${label} (${t('widget.addHint')})`} aria-label={label}
             className="flex items-center justify-center w-9 h-9 rounded-xl border border-theme bg-base transition-all cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-sm hover:border-(--accent)"
             style={{ color: 'var(--accent)' }}>
             {Icon && <Icon size={16} strokeWidth={2.2} />}
@@ -61,8 +63,9 @@ function Palette({ hiddenWidgets, addWidget, iconOf, onDragWidgetStart, onDragWi
 export default function WidgetBoard({ grid, content }) {
   const {
     canEdit, editMode, setEditMode,
-    gridLayout, hiddenWidgets, addWidget, removeWidget, onLayoutChange, labelOf, iconOf,
+    gridLayout, hiddenWidgets, addWidget, removeWidget, onLayoutChange, labelKeyOf, iconOf,
   } = grid
+  const { t } = useLanguage()
   const { width, containerRef, mounted } = useContainerWidth()
   const isMobile = useIsMobile() // <768px: 드래그 그리드 대신 세로 스택 - 2026-07-28
 
@@ -119,7 +122,7 @@ export default function WidgetBoard({ grid, content }) {
           </div>
         ))}
         {ordered.length === 0 && (
-          <p className="text-xs text-muted text-center py-10">표시할 위젯이 없습니다.</p>
+          <p className="text-xs text-muted text-center py-10">{t('widget.emptyMobile')}</p>
         )}
       </div>
     )
@@ -165,12 +168,12 @@ export default function WidgetBoard({ grid, content }) {
                     {/* 드래그 힌트 — 위젯 본문 전체가 드래그 가능(div라 cancel 예외에 걸리지 않음) - 2026-07-25 */}
                     <span
                       className="flex items-center justify-center w-7 h-7 rounded-lg cursor-grab active:cursor-grabbing bg-surface border border-theme text-muted shadow-sm select-none pointer-events-none"
-                      title={`${labelOf(item.i)} 이동`}
+                      title={`${t(labelKeyOf(item.i))} · ${t('widget.move')}`}
                       aria-hidden="true">
                       <GripVertical size={14} />
                     </span>
                     <button onClick={() => removeWidget(item.i)}
-                      title="숨기기" aria-label={`${labelOf(item.i)} 숨기기`}
+                      title={t('widget.hide')} aria-label={`${t(labelKeyOf(item.i))} · ${t('widget.hide')}`}
                       className="flex items-center justify-center w-7 h-7 rounded-lg bg-surface border border-theme text-muted hover:text-red-400 hover:border-red-400/40 shadow-sm transition-colors">
                       <EyeOff size={14} />
                     </button>
@@ -184,7 +187,7 @@ export default function WidgetBoard({ grid, content }) {
 
         {canEdit && editMode && gridLayout.length === 0 && (
           <p className="text-xs text-muted text-center py-10">
-            표시할 위젯이 없습니다. 오른쪽 사이드바의 “위젯 추가”에서 배치하세요.
+            {t('widget.emptyEdit')}
           </p>
         )}
       </div>
@@ -192,7 +195,7 @@ export default function WidgetBoard({ grid, content }) {
       {/* 오른쪽 사이드바 — 위젯 편집 버튼 + (편집 시) 위젯 추가 아이콘 세로 정렬 - 2026-07-25 */}
       {canEdit && (
         <aside className="w-14 shrink-0 border-l border-theme bg-base flex flex-col items-center pt-2 gap-3 overflow-y-auto">
-          <EditToggle editMode={editMode} setEditMode={setEditMode} />
+          <EditToggle editMode={editMode} setEditMode={setEditMode} t={t} />
           {editMode && (
             <Palette
               hiddenWidgets={hiddenWidgets}
@@ -200,6 +203,7 @@ export default function WidgetBoard({ grid, content }) {
               iconOf={iconOf}
               onDragWidgetStart={setDragWidget}
               onDragWidgetEnd={() => setDragWidget(null)}
+              t={t}
             />
           )}
         </aside>

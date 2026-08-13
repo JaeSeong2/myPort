@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Check, X } from 'lucide-react'
 import { useAuth } from '../../../context/AuthContext'
+import { useLanguage } from '../../../context/LanguageContext'
 
 const keyFor = (uid) => `mes_widget_todo_${(uid || 'guest').toLowerCase()}`
 
@@ -14,6 +15,7 @@ const load = (uid) => {
 
 export default function TodoWidget() {
   const { currentUser } = useAuth()
+  const { t } = useLanguage()
   const uid = currentUser?.user_id
   const [items, setItems] = useState(() => load(uid))
   const [input, setInput] = useState('')
@@ -26,9 +28,9 @@ export default function TodoWidget() {
   }
 
   const add = () => {
-    const t = input.trim()
-    if (!t) return
-    commit([...items, { id: Date.now(), text: t, done: false }])
+    const v = input.trim()
+    if (!v) return
+    commit([...items, { id: Date.now(), text: v, done: false }])
     setInput('')
   }
   const toggle = (id) => commit(items.map((i) => (i.id === id ? { ...i, done: !i.done } : i)))
@@ -39,7 +41,7 @@ export default function TodoWidget() {
   return (
     <div className="bg-surface border border-theme rounded-xl p-4 h-full flex flex-col">
       <div className="flex items-center justify-between mb-3 shrink-0">
-        <h3 className="text-sm font-semibold text-primary">할 일 목록</h3>
+        <h3 className="text-sm font-semibold text-primary">{t('widget.todo')}</h3>
         {items.length > 0 && (
           <span className="text-xs text-muted">{doneCount}/{items.length}</span>
         )}
@@ -50,7 +52,7 @@ export default function TodoWidget() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') add() }}
-          placeholder="할 일 추가…"
+          placeholder={t('widget.todoPh')}
           className="flex-1 rounded-lg border border-theme bg-base px-3 py-1.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-(--accent)"
         />
         <button onClick={add}
@@ -60,7 +62,7 @@ export default function TodoWidget() {
       </div>
 
       {items.length === 0 ? (
-        <p className="text-xs text-muted text-center py-3">할 일이 없습니다.</p>
+        <p className="text-xs text-muted text-center py-3">{t('widget.todoEmpty')}</p>
       ) : (
         <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-auto">
           {items.map((i) => (

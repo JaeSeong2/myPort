@@ -97,26 +97,27 @@ async def _build_summary(db) -> dict:
     }
 
 
-@router.post("/insight")
-async def ai_insight(request: Request):
-    """월간 KPI 기반 AI 생산 인사이트 생성 - IP당 일일 AI_DAILY_LIMIT회 제한 - 2026-06-04"""
-    ip    = request.client.host if request.client else "unknown"
-    today = date.today().isoformat()
-
-    if _ai_call_log[ip][today] >= AI_DAILY_LIMIT:
-        raise HTTPException(
-            status_code=429,
-            detail=f"AI 인사이트는 하루 {AI_DAILY_LIMIT}회까지 요청할 수 있습니다."
+# 언어별 시스템/프롬프트 — JSON 키는 언어 중립(highlight/caution/suggestion)으로 통일 - 2026-08-13
+# 프런트는 언어와 무관하게 이 키로 파싱하고, 라벨은 로케일(t)로 표시한다.
+def _messages_for(summary: dict, lang: str):
+    if lang == "en":
+        system_msg = (
+            "You are an MES (Manufacturing Execution System) data analyst. "
+            "Respond ONLY in clear, professional English. "
+            "Use only English letters, numbers, %, and common abbreviations (MES, KPI)."
         )
+        prompt = (
+            "Below is this month's MES KPI summary data.\n"
+            f"{summary}\n\n"
+            "Analyze it and respond ONLY in the following JSON format, in English. "
+            "Do not add any other text:\n"
+            '{"highlight": "1-2 sentences on key performance", '
+            '"caution": "1-2 sentences on items needing attention", '
+            '"suggestion": "1-2 sentences on improvement suggestions"}'
+        )
+        return system_msg, prompt
 
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=503, detail="Groq API 키가 설정되지 않았습니다.")
-
-    db      = request.app.state.db
-    summary = await _build_summary(db)
-
-    # 한국어 전용 강제 — 한자/베트남어 등 타 언어 토큰 혼입(language leakage) 방지 - 2026-08-02
+    # 기본: 한국어 전용 강제 — 한자/베트남어 등 타 언어 토큰 혼입(language leakage) 방지 - 2026-08-02
     system_msg = (
         "당신은 한국 제조 현장의 MES 데이터 분석가입니다. "
         "반드시 100% 표준 한국어(한글)로만 작성하세요. "
@@ -124,13 +125,45 @@ async def ai_insight(request: Request):
         "예: '良好' → '양호', 'thấp' → '낮음'. "
         "숫자와 %, 영문 약어(MES, KPI 등) 외에는 오직 한글만 사용합니다."
     )
-
     prompt = (
         "다음은 MES(제조실행시스템)의 이번 달 KPI 요약 데이터입니다.\n"
         f"{summary}\n\n"
-        "위 데이터를 분석하여 반드시 아래 JSON 형식으로만, 순수 한국어로 응답하세요. 다른 말은 쓰지 마세요:\n"
-        '{"성과": "핵심 성과 1~2문장", "주의": "주의가 필요한 항목 1~2문장", "제안": "개선 제안 1~2문장"}'
+        "위 데이터를 분석하여 반드시 아래 JSON 형식으로만, 순수 한국어로 응답하세요. "
+        "다른 말은 쓰지 마세요. (JSON 키는 영문 그대로 두고 값만 한국어로 작성):\n"
+        '{"highlight": "핵심 성과 1~2문장", "caution": "주의가 필요한 항목 1~2문장", "suggestion": "개선 제안 1~2문장"}'
     )
+    return system_msg, prompt
+
+
+@router.post("/insight")
+async def ai_insight(request: Request):
+    """월간 KPI 기반 AI 생산 인사이트 생성 - IP당 일일 AI_DAILY_LIMIT회 제한 - 2026-06-04
+    요청 본문의 lang(ko|en)에 따라 응답 언어 결정 - 2026-08-13"""
+    ip    = request.client.host if request.client else "unknown"
+    today = date.today().isoformat()
+
+    # 요청 언어 파싱 (본문 없으면 ko)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    lang = "en" if str(body.get("lang", "ko")).lower() == "en" else "ko"
+
+    if _ai_call_log[ip][today] >= AI_DAILY_LIMIT:
+        msg = (f"AI insight is limited to {AI_DAILY_LIMIT} requests per day."
+               if lang == "en" else
+               f"AI 인사이트는 하루 {AI_DAILY_LIMIT}회까지 요청할 수 있습니다.")
+        raise HTTPException(status_code=429, detail=msg)
+
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        msg = ("Groq API key is not configured." if lang == "en"
+               else "Groq API 키가 설정되지 않았습니다.")
+        raise HTTPException(status_code=503, detail=msg)
+
+    db      = request.app.state.db
+    summary = await _build_summary(db)
+    system_msg, prompt = _messages_for(summary, lang)
 
     client   = AsyncGroq(api_key=api_key)
     response = await client.chat.completions.create(

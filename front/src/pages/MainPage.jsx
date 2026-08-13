@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import TopBar  from '../components/layout/TopBar'
 import Sidebar from '../components/layout/Sidebar'
+import UpdateToast from '../components/layout/UpdateToast'
+// import { APP_VERSION } from '../data/changelog' // 하단 바 비활성화로 임시 주석 - 2026-08-07
 import { PanelProvider } from '../context/PanelContext'
 import { RealtimeProvider } from '../context/RealtimeContext'
 import { useIsMobile }   from '../hooks/useBreakpoint'
@@ -51,6 +53,14 @@ export default function MainPage() {
             <Outlet />
           </main>
         </div>
+
+        {/* 하단 바 — 좌측 버전 표시 - 2026-08-07 (임시 비활성화) */}
+        {/* <footer className="shrink-0 h-7 flex items-center px-4 border-t border-theme bg-surface">
+          <span className="text-[11px] text-muted">v{APP_VERSION}</span>
+        </footer> */}
+
+        {/* 새 버전 배포 감지 토스트 - 2026-08-07 */}
+        <UpdateToast />
       </div>
     </RealtimeProvider>
     </PanelProvider>

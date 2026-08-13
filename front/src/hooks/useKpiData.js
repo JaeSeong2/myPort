@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { API_BASE } from '../constants/api'
 import { effectiveMonthRange } from '../utils/effectiveMonth'
+import { useLanguage } from '../context/LanguageContext'
 
 const AI_API   = `${API_BASE}/api/ai/insight`
 const WO_API   = `${API_BASE}/api/work-orders`
@@ -11,10 +12,10 @@ const INV_API  = `${API_BASE}/api/inventory`
 const QA_API   = `${API_BASE}/api/quality`
 const EQ_API   = `${API_BASE}/api/equipment`
 
-// 오늘 날짜 기준 캐시 키 — 날짜가 바뀌면 자동 초기화
-const insightKey = () => `ai_insight_${new Date().toISOString().slice(0, 10)}`
-const readCache = () => {
-  try { return JSON.parse(localStorage.getItem(insightKey())) ?? null }
+// 오늘 날짜 + 언어 기준 캐시 키 — 날짜/언어가 바뀌면 자동 분리 - 2026-08-13
+const insightKey = (lang) => `ai_insight_${new Date().toISOString().slice(0, 10)}_${lang}`
+const readCache = (lang) => {
+  try { return JSON.parse(localStorage.getItem(insightKey(lang))) ?? null }
   catch { return null }
 }
 
@@ -26,13 +27,14 @@ const fmtDate = (d) => {
 }
 
 export function useKpiData() {
+  const { lang } = useLanguage() // AI 인사이트 생성/캐시 언어 - 2026-08-13
   const [kpi,       setKpi]       = useState({ wo: 0, ongoing: 0, lowStock: 0, passRate: '—', eqRunning: 0, eqBreakdown: 0 })
   const [prodChart, setProdChart] = useState([])
   const [invChart,  setInvChart]  = useState([])
   const [loading,   setLoading]   = useState(true)
 
-  // localStorage 캐시로 초기화 — 다른 화면 이동 후 복귀 시 유지
-  const [_init]          = useState(readCache)
+  // localStorage 캐시로 초기화 — 다른 화면 이동 후 복귀 시 유지(현재 언어 기준)
+  const [_init]          = useState(() => readCache(lang))
   const [aiInsight,      setAiInsight]      = useState(_init?.insight        ?? '')
   const [aiLoading,      setAiLoading]      = useState(false)
   const [aiError,        setAiError]        = useState('')
@@ -40,8 +42,8 @@ export function useKpiData() {
   const [remainingCalls, setRemainingCalls] = useState(_init?.remainingCalls ?? null)
   const [generatedAt,    setGeneratedAt]    = useState(_init?.generatedAt    ?? '')
 
-  // 자동 생성은 세션당 한 번만 — 캐시 있으면 스킵
-  const autoGenFired = useRef(!!_init)
+  // 언어별 자동 생성 1회 추적 — 초기 캐시가 있으면 해당 언어는 완료로 간주
+  const firedLangs = useRef(new Set(_init ? [lang] : []))
 
   const loadKpi = useCallback(async () => {
     setLoading(true)
@@ -119,16 +121,22 @@ export function useKpiData() {
     setTokenUsage(null)
     setGeneratedAt('')
     try {
-      const res  = await fetch(AI_API, { method: 'POST' })
+      // 현재 언어를 백엔드에 전달 → 해당 언어로 인사이트 생성 - 2026-08-13
+      const res  = await fetch(AI_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lang }),
+      })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.detail ?? '요청 실패')
+      if (!res.ok) throw new Error(data.detail ?? (lang === 'en' ? 'Request failed' : '요청 실패'))
       const now = new Date().toISOString()
       setAiInsight(data.insight)
       setTokenUsage(data.token_usage)
       setRemainingCalls(data.remaining_calls)
       setGeneratedAt(now)
-      // 오늘 날짜 키로 저장 — 화면 전환·사용자 전환 후에도 유지
-      localStorage.setItem(insightKey(), JSON.stringify({
+      firedLangs.current.add(lang)
+      // 오늘 날짜 + 언어 키로 저장 — 화면 전환·사용자 전환 후에도 유지
+      localStorage.setItem(insightKey(lang), JSON.stringify({
         insight:        data.insight,
         tokenUsage:     data.token_usage,
         remainingCalls: data.remaining_calls,
@@ -139,17 +147,27 @@ export function useKpiData() {
     } finally {
       setAiLoading(false)
     }
-  }, [])
+  }, [lang])
 
-  // KPI 로드 완료 후 캐시 없으면 자동 생성
+  // 언어 변경 시 해당 언어 캐시로 화면 동기화(없으면 비움) - 2026-08-13
   useEffect(() => {
-    if (loading || autoGenFired.current) return
+    const c = readCache(lang)
+    setAiInsight(c?.insight ?? '')
+    setTokenUsage(c?.tokenUsage ?? null)
+    setRemainingCalls(c?.remainingCalls ?? null)
+    setGeneratedAt(c?.generatedAt ?? '')
+  }, [lang])
+
+  // KPI 로드 완료 후, 현재 언어로 아직 생성 안 했고 캐시도 없으면 자동 생성 - 2026-08-13
+  useEffect(() => {
+    if (loading || firedLangs.current.has(lang)) return
+    if (readCache(lang)) { firedLangs.current.add(lang); return }
     const hasData = kpi.wo > 0 || prodChart.length > 0
     if (hasData) {
-      autoGenFired.current = true
+      firedLangs.current.add(lang)
       requestInsight()
     }
-  }, [loading, kpi.wo, prodChart.length, requestInsight])
+  }, [loading, kpi.wo, prodChart.length, lang, requestInsight])
 
   return {
     loading, kpi, prodChart, invChart,

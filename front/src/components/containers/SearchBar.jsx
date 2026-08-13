@@ -35,7 +35,8 @@ function FieldInput({ field, value, onChange }) {
       setAsyncOpts(optionsCache[field.optionsFrom])
       return
     }
-    const url = new URL(field.optionsFrom)
+    // API_BASE가 상대경로(빈 값)여도 동작하도록 현재 origin을 base로 사용 - 2026-08-07
+    const url = new URL(field.optionsFrom, window.location.origin)
     url.searchParams.set('active_only', 'true')
     fetch(url.toString())
       .then(r => r.json())

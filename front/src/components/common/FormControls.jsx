@@ -1,6 +1,7 @@
 // 폼 공통 컨트롤 - 2026-05-24
 import { useState, useEffect } from 'react'
 import { API_BASE } from '../../constants/api'
+import { useLanguage } from '../../context/LanguageContext'
 
 const ITEMS_API = `${API_BASE}/api/items`
 
@@ -102,9 +103,12 @@ export function ItemSelect({
   onSelect,
   readOnly  = false,
   filter,
-  nameLabel = '품목명',
-  codeLabel = '품목코드',
+  nameLabel,
+  codeLabel,
 }) {
+  const { t } = useLanguage()
+  const nl = nameLabel ?? t('item.name')  // 미지정 시 로케일 기본 - 2026-08-13
+  const cl = codeLabel ?? t('item.code')
   const [items, setItems] = useState([])
 
   useEffect(() => {
@@ -128,12 +132,12 @@ export function ItemSelect({
   return (
     <>
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-muted">{nameLabel}</label>
+        <label className="text-xs text-muted">{nl}</label>
         {readOnly ? (
           <input value={productName} readOnly className={inputCls} />
         ) : (
           <select value={productCode} onChange={handleChange} className={selectCls}>
-            <option value="">품목 선택</option>
+            <option value="">{t('form.selectItem')}</option>
             {items.map(i => (
               <option key={i.code} value={i.code}>{i.name}</option>
             ))}
@@ -141,7 +145,7 @@ export function ItemSelect({
         )}
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-muted">{codeLabel}</label>
+        <label className="text-xs text-muted">{cl}</label>
         <input value={productCode} readOnly className={inputCls} />
       </div>
     </>

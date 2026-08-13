@@ -122,7 +122,8 @@ export function useWidgetGrid(widgets, prefix) {
     canEdit, editMode, setEditMode,
     gridLayout, hiddenWidgets,
     addWidget, removeWidget, onLayoutChange,
-    labelOf: (id) => metaOf(id).label ?? id,
+    // 레지스트리 labelKey 반환 — 표시 시 t()로 해석(WidgetBoard) - 2026-08-13
+    labelKeyOf: (id) => metaOf(id).labelKey ?? id,
     iconOf: (id) => metaOf(id).icon ?? null,
   }
 }

@@ -1,10 +1,12 @@
 import { PageTitle } from '../../../components/common/FormControls'
+import { useLanguage } from '../../../context/LanguageContext'
 
 export default function DefectPage() {
+  const { t } = useLanguage()
   return (
     <div className="p-6 flex flex-col gap-4">
-      <PageTitle title="불량 현황" />
-      <p className="text-muted text-sm">준비 중</p>
+      <PageTitle title={t('menu.qa.defect')} />
+      <p className="text-muted text-sm">{t('msg.wip')}</p>
     </div>
   )
 }

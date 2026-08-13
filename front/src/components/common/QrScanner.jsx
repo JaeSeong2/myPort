@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, ScanLine, AlertTriangle, Loader2 } from 'lucide-react'
 import jsQR from 'jsqr'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default function QrScanner({ open, onClose, onDetected }) {
+  const { t } = useLanguage()
   const videoRef  = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
@@ -25,7 +27,7 @@ export default function QrScanner({ open, onClose, onDetected }) {
     const start = async () => {
       if (!navigator.mediaDevices?.getUserMedia) {
         setStatus('error')
-        setErrMsg('이 브라우저/환경에서는 카메라를 사용할 수 없습니다. (HTTPS 필요)')
+        setErrMsg(t('qr.noCam'))
         return
       }
       try {
@@ -33,7 +35,7 @@ export default function QrScanner({ open, onClose, onDetected }) {
           video: { facingMode: { ideal: 'environment' } }, // 후면 카메라 우선
           audio: false,
         })
-        if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return }
+        if (cancelled) { stream.getTracks().forEach((tr) => tr.stop()); return }
         streamRef.current = stream
         const video = videoRef.current
         if (!video) return
@@ -46,10 +48,10 @@ export default function QrScanner({ open, onClose, onDetected }) {
         setStatus('error')
         setErrMsg(
           e?.name === 'NotAllowedError'
-            ? '카메라 권한이 거부되었습니다. 브라우저 설정에서 허용해주세요.'
+            ? t('qr.denied')
             : e?.name === 'NotFoundError'
-              ? '사용 가능한 카메라를 찾을 수 없습니다.'
-              : '카메라를 시작할 수 없습니다.'
+              ? t('qr.notFound')
+              : t('qr.startFail')
         )
       }
     }
@@ -89,7 +91,7 @@ export default function QrScanner({ open, onClose, onDetected }) {
   const stop = () => {
     cancelAnimationFrame(rafRef.current)
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop())
+      streamRef.current.getTracks().forEach((tr) => tr.stop())
       streamRef.current = null
     }
   }
@@ -104,7 +106,7 @@ export default function QrScanner({ open, onClose, onDetected }) {
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-theme">
           <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
-            <ScanLine size={15} className="text-accent" /> QR 스캔
+            <ScanLine size={15} className="text-accent" /> {t('qr.title')}
           </h3>
           <button onClick={onClose} className="p-1 rounded-lg text-muted hover-text-primary hover-bg-elevated transition-colors cursor-pointer">
             <X size={16} />
@@ -126,7 +128,7 @@ export default function QrScanner({ open, onClose, onDetected }) {
           {status === 'starting' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/90">
               <Loader2 size={22} className="animate-spin" />
-              <span className="text-xs">카메라 여는 중...</span>
+              <span className="text-xs">{t('qr.opening')}</span>
             </div>
           )}
 
@@ -140,7 +142,7 @@ export default function QrScanner({ open, onClose, onDetected }) {
 
         {/* 안내 */}
         <p className="text-xs text-muted text-center px-4 py-3">
-          LOT QR을 사각형 안에 맞추면 자동으로 인식됩니다.
+          {t('qr.guide')}
         </p>
       </div>
     </div>

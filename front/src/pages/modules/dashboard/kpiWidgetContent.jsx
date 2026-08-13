@@ -7,26 +7,28 @@ import {
   Sparkles, Loader2, TrendingUp, AlertTriangle, Lightbulb,
 } from 'lucide-react'
 
+// 언어 중립 JSON 키(highlight/caution/suggestion) + 라벨은 t()로 - 2026-08-13
 const INSIGHT_SECTIONS = [
-  { key: '성과', label: '핵심 성과', icon: TrendingUp,     color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.25)' },
-  { key: '주의', label: '주의 항목', icon: AlertTriangle,  color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)' },
-  { key: '제안', label: '개선 제안', icon: Lightbulb,      color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.25)' },
+  { key: 'highlight',  labelKey: 'ai.highlight',  icon: TrendingUp,    color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.25)' },
+  { key: 'caution',    labelKey: 'ai.caution',    icon: AlertTriangle, color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)' },
+  { key: 'suggestion', labelKey: 'ai.suggestion', icon: Lightbulb,     color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.25)' },
 ]
 
-// JSON 형식이면 섹션 객체 반환, 아니면 null
+// JSON 형식이면 섹션 객체 반환, 아니면 null (언어 중립 키 기준) - 2026-08-13
 const parseInsight = (text) => {
   if (!text) return null
   try {
     const parsed = JSON.parse(text)
-    if (parsed.성과 || parsed.주의 || parsed.제안) return parsed
+    if (parsed.highlight || parsed.caution || parsed.suggestion) return parsed
   } catch {}
   return null
 }
 
-const fmtGeneratedAt = (iso) => {
+const fmtGeneratedAt = (iso, t) => {
   if (!iso) return ''
   const d = new Date(iso)
-  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} 생성`
+  const base = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  return `${base} ${t('ai.generatedSuffix')}`.trim()
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -48,25 +50,25 @@ const CustomTooltip = ({ active, payload, label }) => {
  * @returns {{ kpi:node, prod:node, inv:node, ai:node }}
  * 차트 위젯은 컨테이너 높이를 꽉 채움(리사이즈 핸들로 높이 조절) - 2026-07-25
  */
-export function buildKpiContent(d) {
+export function buildKpiContent(d, t) {
   const {
     loading, kpi, prodChart, invChart,
     aiInsight, aiLoading, aiError, tokenUsage, remainingCalls, generatedAt, requestInsight,
   } = d
 
   const KPI_CARDS = [
-    { icon: <ClipboardList size={20} />, label: '월 작업지시', value: kpi.wo,          unit: '건',   color: '#60a5fa' },
-    { icon: <Factory size={20} />,       label: '진행중 생산', value: kpi.ongoing,     unit: '건',   color: '#34d399' },
-    { icon: <Package size={20} />,       label: '재고 부족',   value: kpi.lowStock,    unit: '품목', color: '#f87171' },
-    { icon: <ShieldCheck size={20} />,   label: '월 합격률',   value: kpi.passRate,    unit: '',     color: '#a78bfa' },
-    { icon: <Wrench size={20} />,        label: '가동 설비',   value: kpi.eqRunning,   unit: '대',   color: '#4ade80' },
-    { icon: <Wrench size={20} />,        label: '고장 설비',   value: kpi.eqBreakdown, unit: '대',   color: '#f87171' },
+    { icon: <ClipboardList size={20} />, label: t('dash.kpi.wo'),          value: kpi.wo,          unit: t('dash.unit.cases'),    color: '#60a5fa' },
+    { icon: <Factory size={20} />,       label: t('dash.kpi.ongoing'),     value: kpi.ongoing,     unit: t('dash.unit.cases'),    color: '#34d399' },
+    { icon: <Package size={20} />,       label: t('dash.kpi.lowStock'),    value: kpi.lowStock,    unit: t('dash.unit.items'),    color: '#f87171' },
+    { icon: <ShieldCheck size={20} />,   label: t('dash.kpi.passRate'),    value: kpi.passRate,    unit: '',                      color: '#a78bfa' },
+    { icon: <Wrench size={20} />,        label: t('dash.kpi.eqRunning'),   value: kpi.eqRunning,   unit: t('dash.unit.machines'), color: '#4ade80' },
+    { icon: <Wrench size={20} />,        label: t('dash.kpi.eqBreakdown'), value: kpi.eqBreakdown, unit: t('dash.unit.machines'), color: '#f87171' },
   ]
 
   return {
     kpi: (
       <div>
-        <h2 className="text-primary text-lg font-semibold mb-3">월간 KPI 현황</h2>
+        <h2 className="text-primary text-lg font-semibold mb-3">{t('dash.kpiTitle')}</h2>
         <div className="grid grid-cols-3 gap-3">
           {KPI_CARDS.map((c, i) => (
             <div key={i} className="bg-surface border border-theme rounded-xl p-4">
@@ -85,7 +87,7 @@ export function buildKpiContent(d) {
     ),
     prod: (
       <div className="bg-surface border border-theme rounded-xl p-4 flex flex-col">
-        <h3 className="text-sm font-semibold text-primary mb-4 shrink-0">최근 생산 실적 (일별)</h3>
+        <h3 className="text-sm font-semibold text-primary mb-4 shrink-0">{t('dash.prodTitle')}</h3>
         <div className="flex-1 min-h-0">
           {prodChart.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
@@ -94,13 +96,13 @@ export function buildKpiContent(d) {
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="actual" name="실적수량" fill="#60a5fa" radius={[3, 3, 0, 0]} maxBarSize={32} />
-                <Bar dataKey="defect" name="불량수량" fill="#f87171" radius={[3, 3, 0, 0]} maxBarSize={32} />
+                <Bar dataKey="actual" name={t('dash.series.actual')} fill="#60a5fa" radius={[3, 3, 0, 0]} maxBarSize={32} />
+                <Bar dataKey="defect" name={t('dash.series.defect')} fill="#f87171" radius={[3, 3, 0, 0]} maxBarSize={32} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-muted text-sm">
-              {loading ? '로딩 중...' : '이번 달 생산 데이터가 없습니다'}
+              {loading ? t('msg.loading') : t('dash.noProd')}
             </div>
           )}
         </div>
@@ -108,7 +110,7 @@ export function buildKpiContent(d) {
     ),
     inv: (
       <div className="bg-surface border border-theme rounded-xl p-4 flex flex-col">
-        <h3 className="text-sm font-semibold text-primary mb-4 shrink-0">자재 재고 현황</h3>
+        <h3 className="text-sm font-semibold text-primary mb-4 shrink-0">{t('dash.invTitle')}</h3>
         <div className="flex-1 min-h-0">
           {invChart.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
@@ -118,12 +120,12 @@ export function buildKpiContent(d) {
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#6b7280' }}
                   width={80} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="stock" name="현재고" fill="#34d399" radius={[0, 3, 3, 0]} maxBarSize={20} />
+                <Bar dataKey="stock" name={t('dash.series.stock')} fill="#34d399" radius={[0, 3, 3, 0]} maxBarSize={20} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-muted text-sm">
-              {loading ? '로딩 중...' : '재고 데이터가 없습니다'}
+              {loading ? t('msg.loading') : t('dash.noInv')}
             </div>
           )}
         </div>
@@ -134,9 +136,9 @@ export function buildKpiContent(d) {
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
             <Sparkles size={15} className="text-violet-400" />
-            AI 생산 인사이트
+            {t('ai.title')}
             {generatedAt && (
-              <span className="text-xs font-normal text-muted ml-1">· {fmtGeneratedAt(generatedAt)}</span>
+              <span className="text-xs font-normal text-muted ml-1">· {fmtGeneratedAt(generatedAt, t)}</span>
             )}
           </h3>
           <button
@@ -146,8 +148,8 @@ export function buildKpiContent(d) {
             style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' }}
           >
             {aiLoading
-              ? <><Loader2 size={12} className="animate-spin" /> 분석 중...</>
-              : <><Sparkles size={12} /> {aiInsight ? '재생성' : '인사이트 생성'}</>}
+              ? <><Loader2 size={12} className="animate-spin" /> {t('ai.analyzing')}</>
+              : <><Sparkles size={12} /> {aiInsight ? t('ai.regen') : t('ai.generate')}</>}
           </button>
         </div>
 
@@ -160,12 +162,12 @@ export function buildKpiContent(d) {
           if (sections) {
             return (
               <div className="flex flex-col gap-2 mb-3">
-                {INSIGHT_SECTIONS.map(({ key, label, icon: Icon, color, bg, border }) =>
+                {INSIGHT_SECTIONS.map(({ key, labelKey, icon: Icon, color, bg, border }) =>
                   sections[key] ? (
                     <div key={key} className="rounded-lg px-3 py-2.5" style={{ background: bg, border: `1px solid ${border}` }}>
                       <div className="flex items-center gap-1.5 mb-1">
                         <Icon size={12} style={{ color }} />
-                        <span className="text-xs font-semibold" style={{ color }}>{label}</span>
+                        <span className="text-xs font-semibold" style={{ color }}>{t(labelKey)}</span>
                       </div>
                       <p className="text-xs text-primary leading-relaxed">{sections[key]}</p>
                     </div>
@@ -180,24 +182,24 @@ export function buildKpiContent(d) {
         })()}
 
         {!aiInsight && !aiError && !aiLoading && (
-          <p className="text-xs text-muted text-center py-4">KPI 데이터 로딩 후 자동으로 분석됩니다</p>
+          <p className="text-xs text-muted text-center py-4">{t('ai.autoHint')}</p>
         )}
 
         {aiLoading && !aiInsight && (
           <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted">
             <Loader2 size={14} className="animate-spin text-violet-400" />
-            이번 달 KPI를 분석하고 있습니다...
+            {t('ai.analyzingLong')}
           </div>
         )}
 
         {tokenUsage && (
           <div className="flex items-center gap-3 pt-2 border-t border-theme mt-2">
-            <span className="text-xs text-muted">토큰 사용량</span>
-            <span className="text-xs" style={{ color: '#60a5fa' }}>입력 {tokenUsage.prompt_tokens}</span>
-            <span className="text-xs" style={{ color: '#34d399' }}>출력 {tokenUsage.completion_tokens}</span>
-            <span className="text-xs text-muted">합계 {tokenUsage.total_tokens}</span>
+            <span className="text-xs text-muted">{t('ai.tokenUsage')}</span>
+            <span className="text-xs" style={{ color: '#60a5fa' }}>{t('ai.tokenIn')} {tokenUsage.prompt_tokens}</span>
+            <span className="text-xs" style={{ color: '#34d399' }}>{t('ai.tokenOut')} {tokenUsage.completion_tokens}</span>
+            <span className="text-xs text-muted">{t('ai.tokenTotal')} {tokenUsage.total_tokens}</span>
             {remainingCalls !== null && (
-              <span className="text-xs text-muted ml-auto">오늘 잔여 {remainingCalls}회</span>
+              <span className="text-xs text-muted ml-auto">{t('ai.remaining').replace('{n}', remainingCalls)}</span>
             )}
           </div>
         )}

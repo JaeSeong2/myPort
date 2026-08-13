@@ -107,6 +107,9 @@
   z-index: 20;
 }
 
+/* 다중 문서 미리보기 간격(화면 전용) - 2026-08-07 */
+.doc-page + .doc-page { margin-top: 20px; }
+
 /* ── 인쇄: 문서 미리보기(.print-area)만 출력, 나머지 화면 숨김 - 2026-07-24 ── */
 @media print {
   body * { visibility: hidden !important; }
@@ -116,6 +119,9 @@
     margin: 0; box-shadow: none !important;
   }
   .doc-sheet { width: 100% !important; padding: 0 !important; box-shadow: none !important; }
+  /* 다중 문서: 두 번째 문서부터 새 페이지에서 시작 - 2026-08-07 */
+  .doc-page { margin-top: 0 !important; }
+  .doc-page + .doc-page { break-before: page; page-break-before: always; }
   .no-print { display: none !important; }
   @page { size: A4; margin: 12mm; }
 }

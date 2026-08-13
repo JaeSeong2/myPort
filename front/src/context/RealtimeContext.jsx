@@ -2,6 +2,7 @@
 // TopBar 알림센터와 대시보드 Andon 위젯이 이 하나의 스트림을 공유한다.
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { API_BASE } from '../constants/api'
+import { useLanguage } from './LanguageContext'
 
 const RealtimeContext = createContext(null)
 
@@ -11,14 +12,15 @@ export const useRealtime = () => useContext(RealtimeContext)
 const EMPTY_ANDON = { summary: {}, lines: [], total: 0 }
 
 export function RealtimeProvider({ children }) {
+  const { lang } = useLanguage() // 알림 문구 언어 - 2026-08-13
   const [alerts,    setAlerts]    = useState([])
   const [andon,     setAndon]     = useState(EMPTY_ANDON)
   const [connected, setConnected] = useState(false)
   const [readIds,   setReadIds]   = useState(() => new Set()) // 읽음 처리한 알림 id
 
-  // SSE 연결 — EventSource는 끊기면 자동 재연결하므로 수동 재시도 불필요 - 2026-08-02
+  // SSE 연결 — EventSource는 끊기면 자동 재연결. 언어 변경 시 재연결(lang 쿼리) - 2026-08-13
   useEffect(() => {
-    const es = new EventSource(`${API_BASE}/api/alerts/stream`)
+    const es = new EventSource(`${API_BASE}/api/alerts/stream?lang=${lang}`)
     es.onopen = () => setConnected(true)
     es.onmessage = (e) => {
       try {
@@ -30,7 +32,7 @@ export function RealtimeProvider({ children }) {
     }
     es.onerror = () => setConnected(false) // 재연결은 브라우저가 자동 처리
     return () => es.close()
-  }, [])
+  }, [lang])
 
   // 알림센터를 열면 현재 알림을 모두 읽음 처리 → 배지 카운트 초기화 - 2026-08-02
   const markAllRead = useCallback(() => {

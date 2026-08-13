@@ -8,11 +8,11 @@ import TimerWidget from '../../../components/dashboard/widgets/TimerWidget'
 
 // 기본 숨김(hidden) — '위젯 편집 > 위젯 추가'에서 배치 / w·h·min·max: 그리드 단위 - 2026-07-25
 export const UTILITY_WIDGETS = [
-  { id: 'calc',  label: '계산기',      hidden: true, icon: Calculator, w: 3, h: 9, minW: 2, minH: 8, maxW: 6, maxH: 11 },
-  { id: 'memo',  label: '메모',        hidden: true, icon: StickyNote, w: 3, h: 6, minW: 2, minH: 3, maxW: 8, maxH: 16 },
-  { id: 'todo',  label: '할 일 목록',  hidden: true, icon: ListChecks, w: 3, h: 7, minW: 2, minH: 3, maxW: 8, maxH: 16 },
-  { id: 'clock', label: '시계 / 날짜', hidden: true, icon: Clock,      w: 3, h: 4, minW: 2, minH: 3, maxW: 5, maxH: 6 },
-  { id: 'timer', label: '타이머',      hidden: true, icon: Timer,      w: 3, h: 5, minW: 2, minH: 3, maxW: 5, maxH: 8 },
+  { id: 'calc',  labelKey: 'widget.calc',  hidden: true, icon: Calculator, w: 3, h: 9, minW: 2, minH: 8, maxW: 6, maxH: 11 },
+  { id: 'memo',  labelKey: 'widget.memo',  hidden: true, icon: StickyNote, w: 3, h: 6, minW: 2, minH: 3, maxW: 8, maxH: 16 },
+  { id: 'todo',  labelKey: 'widget.todo',  hidden: true, icon: ListChecks, w: 3, h: 7, minW: 2, minH: 3, maxW: 8, maxH: 16 },
+  { id: 'clock', labelKey: 'widget.clock', hidden: true, icon: Clock,      w: 3, h: 4, minW: 2, minH: 3, maxW: 5, maxH: 6 },
+  { id: 'timer', labelKey: 'widget.timer', hidden: true, icon: Timer,      w: 3, h: 5, minW: 2, minH: 3, maxW: 5, maxH: 8 },
 ]
 
 export const utilityContent = {

@@ -4,19 +4,21 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { Factory, ShieldCheck, Layers, Loader2, AlertTriangle, PackageSearch } from 'lucide-react'
 import { API_BASE } from '../constants/api'
+import { useLanguage } from '../context/LanguageContext'
 
+// 상태 코드 → 색상 + 로케일 키(기존 lot.status / lot.log 재사용) - 2026-08-13
 const LOT_STATUS = {
-  CREATED:     { label: '생성됨',   color: '#9ca3af' },
-  IN_PROGRESS: { label: '진행중',   color: '#60a5fa' },
-  COMPLETED:   { label: '완료',     color: '#34d399' },
-  ON_HOLD:     { label: '보류',     color: '#fbbf24' },
+  CREATED:     { labelKey: 'lot.status.CREATED',     color: '#9ca3af' },
+  IN_PROGRESS: { labelKey: 'lot.status.IN_PROGRESS', color: '#60a5fa' },
+  COMPLETED:   { labelKey: 'lot.status.COMPLETED',   color: '#34d399' },
+  ON_HOLD:     { labelKey: 'lot.status.ON_HOLD',     color: '#fbbf24' },
 }
 
 const LOG_STATUS = {
-  PENDING:     { label: '대기',   color: '#9ca3af' },
-  IN_PROGRESS: { label: '진행중', color: '#60a5fa' },
-  COMPLETED:   { label: '완료',   color: '#34d399' },
-  SKIPPED:     { label: '생략',   color: '#9ca3af' },
+  PENDING:     { labelKey: 'lot.log.PENDING',     color: '#9ca3af' },
+  IN_PROGRESS: { labelKey: 'lot.log.IN_PROGRESS', color: '#60a5fa' },
+  COMPLETED:   { labelKey: 'lot.log.COMPLETED',   color: '#34d399' },
+  SKIPPED:     { labelKey: 'lot.log.SKIPPED',     color: '#9ca3af' },
 }
 
 const fmtTime = (iso) => {
@@ -26,6 +28,7 @@ const fmtTime = (iso) => {
 }
 
 export default function PublicLotPage() {
+  const { t } = useLanguage()
   const { lotNo } = useParams()
   const [detail,   setDetail]   = useState(null)
   const [bom,      setBom]      = useState([])
@@ -63,7 +66,7 @@ export default function PublicLotPage() {
     return (
       <div className="min-h-screen bg-base flex items-center justify-center">
         <div className="flex items-center gap-2 text-muted text-sm">
-          <Loader2 size={16} className="animate-spin" /> LOT 정보를 불러오는 중...
+          <Loader2 size={16} className="animate-spin" /> {t('pl.loading')}
         </div>
       </div>
     )
@@ -73,14 +76,19 @@ export default function PublicLotPage() {
     return (
       <div className="min-h-screen bg-base flex flex-col items-center justify-center px-6 text-center">
         <AlertTriangle size={40} className="text-amber-400 mb-3" />
-        <h1 className="text-primary font-semibold mb-1">LOT를 찾을 수 없습니다</h1>
-        <p className="text-muted text-sm">요청하신 <b className="text-primary">{lotNo}</b> 번 LOT 정보가 없습니다.</p>
+        <h1 className="text-primary font-semibold mb-1">{t('pl.notFound')}</h1>
+        <p className="text-muted text-sm">
+          {(() => {
+            const [pre, post] = t('pl.notFoundDesc').split('{n}')
+            return <>{pre}<b className="text-primary">{lotNo}</b>{post}</>
+          })()}
+        </p>
       </div>
     )
   }
 
   const { lot, process_logs: logs = [], inspections = [] } = detail
-  const st = LOT_STATUS[lot.status] ?? { label: lot.status, color: '#9ca3af' }
+  const st = LOT_STATUS[lot.status] ?? { labelKey: null, color: '#9ca3af' }
   const ascending = [...logs].sort((a, b) => a.sequence - b.sequence)
 
   return (
@@ -92,8 +100,8 @@ export default function PublicLotPage() {
           <div className="w-7 h-7 rounded-md flex items-center justify-center bg-accent shrink-0">
             <span className="text-white text-xs font-bold">M</span>
           </div>
-          <span className="text-sm font-semibold text-primary">MES · LOT 추적</span>
-          <span className="ml-auto text-xs px-2 py-0.5 rounded-full border border-theme text-muted">모바일 조회</span>
+          <span className="text-sm font-semibold text-primary">MES · {t('pl.brand')}</span>
+          <span className="ml-auto text-xs px-2 py-0.5 rounded-full border border-theme text-muted">{t('pl.mobileView')}</span>
         </div>
 
         {/* LOT 헤더 카드 */}
@@ -102,28 +110,28 @@ export default function PublicLotPage() {
             <h1 className="text-lg font-bold text-primary tracking-tight break-all">{lot.lot_no}</h1>
             <span className="px-2.5 py-1 rounded-full text-xs font-semibold shrink-0"
               style={{ color: st.color, background: `${st.color}1a`, border: `1px solid ${st.color}55` }}>
-              {st.label}
+              {st.labelKey ? t(st.labelKey) : lot.status}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
-            <Info label="품번" value={lot.product_code} />
-            <Info label="품명" value={lot.product_name} />
-            <Info label="지시번호" value={lot.order_id} />
-            <Info label="수량" value={`${lot.planned_qty} EA`} />
-            <Info label="개시일" value={lot.opened_at} />
-            <Info label="완료일" value={lot.closed_at ?? '-'} />
+            <Info label={t('pl.itemCode')} value={lot.product_code} />
+            <Info label={t('pl.itemName')} value={lot.product_name} />
+            <Info label={t('pl.orderId')} value={lot.order_id} />
+            <Info label={t('pl.qty')} value={`${lot.planned_qty} EA`} />
+            <Info label={t('pl.openedAt')} value={lot.opened_at} />
+            <Info label={t('pl.closedAt')} value={lot.closed_at ?? '-'} />
           </div>
           {lot.note && <p className="mt-3 pt-3 border-t border-theme text-xs text-muted">{lot.note}</p>}
         </div>
 
         {/* 공정 이력 */}
-        <Section icon={Factory} title="공정 이력">
+        <Section icon={Factory} title={t('pl.procHistory')}>
           {ascending.length === 0 ? (
-            <Empty text="등록된 공정이 없습니다." />
+            <Empty text={t('pl.noProc')} />
           ) : (
             <div className="flex flex-col gap-2">
               {ascending.map((log) => {
-                const ls = LOG_STATUS[log.status] ?? { label: log.status, color: '#9ca3af' }
+                const ls = LOG_STATUS[log.status] ?? { labelKey: null, color: '#9ca3af' }
                 const time = [fmtTime(log.started_at), fmtTime(log.completed_at)].filter(Boolean).join(' ~ ')
                 return (
                   <div key={log._id} className="flex items-center gap-3 rounded-xl border border-theme bg-base px-3 py-2.5">
@@ -134,13 +142,13 @@ export default function PublicLotPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm font-medium text-primary truncate">{log.process_name}</span>
-                        <span className="text-xs font-semibold shrink-0" style={{ color: ls.color }}>{ls.label}</span>
+                        <span className="text-xs font-semibold shrink-0" style={{ color: ls.color }}>{ls.labelKey ? t(ls.labelKey) : log.status}</span>
                       </div>
                       <div className="text-xs text-muted mt-0.5 flex flex-wrap gap-x-2">
                         <span>{log.process_code}</span>
                         {time && <span>⏱ {time}</span>}
                         {log.worker_code && <span>· {log.worker_code}</span>}
-                        {log.actual_qty != null && <span>· 양품 {log.good_qty ?? log.actual_qty}</span>}
+                        {log.actual_qty != null && <span>· {t('pl.good')} {log.good_qty ?? log.actual_qty}</span>}
                       </div>
                     </div>
                   </div>
@@ -151,9 +159,9 @@ export default function PublicLotPage() {
         </Section>
 
         {/* 품질 검사 */}
-        <Section icon={ShieldCheck} title="품질 검사">
+        <Section icon={ShieldCheck} title={t('pl.qaTitle')}>
           {inspections.length === 0 ? (
-            <Empty text="검사 이력이 없습니다." />
+            <Empty text={t('pl.noQa')} />
           ) : (
             <div className="flex flex-col gap-2">
               {inspections.map((qa) => {
@@ -161,12 +169,12 @@ export default function PublicLotPage() {
                 return (
                   <div key={qa._id} className="flex items-center justify-between rounded-xl border border-theme bg-base px-3 py-2.5">
                     <div className="min-w-0">
-                      <div className="text-sm text-primary truncate">{qa.inspect_type ?? '검사'}</div>
-                      <div className="text-xs text-muted">{qa.inspect_date} · 수량 {qa.quantity ?? '-'} / 합격 {qa.passed ?? '-'}</div>
+                      <div className="text-sm text-primary truncate">{qa.inspect_type ?? t('pl.inspect')}</div>
+                      <div className="text-xs text-muted">{qa.inspect_date} · {t('pl.qty')} {qa.quantity ?? '-'} / {t('pl.passed')} {qa.passed ?? '-'}</div>
                     </div>
                     <span className="text-xs font-semibold shrink-0"
                       style={{ color: passed ? '#34d399' : '#f87171' }}>
-                      {passed ? '합격' : '불합격'}
+                      {passed ? t('pl.pass') : t('pl.fail')}
                     </span>
                   </div>
                 )
@@ -176,9 +184,9 @@ export default function PublicLotPage() {
         </Section>
 
         {/* 투입 자재 (BOM 구성) */}
-        <Section icon={Layers} title="투입 자재 (BOM)">
+        <Section icon={Layers} title={t('pl.bomTitle')}>
           {bom.length === 0 ? (
-            <Empty text="등록된 구성 자재가 없습니다." />
+            <Empty text={t('pl.noBom')} />
           ) : (
             <div className="flex flex-col gap-2">
               {bom.map((m) => (
@@ -195,7 +203,7 @@ export default function PublicLotPage() {
         </Section>
 
         <p className="text-center text-xs text-muted flex items-center justify-center gap-1 pt-2 pb-4">
-          <PackageSearch size={12} /> QR 스캔 · 읽기 전용 조회 화면
+          <PackageSearch size={12} /> {t('pl.footer')}
         </p>
       </div>
     </div>

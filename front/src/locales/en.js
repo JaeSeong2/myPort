@@ -4,7 +4,7 @@ export default {
   'btn.search': 'Search', 'btn.save': 'Save',     'btn.add': 'Add',
   'btn.cancel': 'Cancel', 'btn.delete': 'Delete',
   'btn.excel': 'Excel',   'btn.upload': 'Upload',  'btn.download': 'Download',
-  'msg.noData': 'No data found.', 'msg.saving': 'Saving...',
+  'msg.noData': 'No data found.', 'msg.saving': 'Saving...', 'msg.wip': 'Coming soon',
 
   // Menu
   'menu.dashboard': 'Dashboard',
@@ -162,4 +162,149 @@ export default {
   'flow.note': 'Note',
   'flow.create.title': 'Add Process',  'flow.edit.title': 'Edit Process',
   'flow.selectProduct': 'Select a product from the left panel',
+
+  // Common (added)
+  'msg.loading': 'Loading...',
+
+  // Dashboard - KPI/charts
+  'dash.kpiTitle': 'Monthly KPI Status',
+  'dash.prodTitle': 'Recent Production (Daily)',
+  'dash.invTitle': 'Material Stock',
+  'dash.kpi.wo': 'Monthly WO', 'dash.kpi.ongoing': 'Ongoing Prod.', 'dash.kpi.lowStock': 'Low Stock',
+  'dash.kpi.passRate': 'Pass Rate', 'dash.kpi.eqRunning': 'Running', 'dash.kpi.eqBreakdown': 'Breakdown',
+  'dash.unit.cases': '', 'dash.unit.items': 'items', 'dash.unit.machines': 'units',
+  'dash.series.actual': 'Actual', 'dash.series.defect': 'Defect', 'dash.series.stock': 'Stock',
+  'dash.noProd': 'No production data this month', 'dash.noInv': 'No stock data',
+
+  // Worker dashboard
+  'dw.title': "Today's Work",
+  'dw.noWorker': 'No worker code assigned to your account.',
+  'dw.noWorkerHint': 'Ask an administrator to register your worker_code.',
+  'dw.assignedWo': 'Assigned WO', 'dw.todayProd': "Today's Output", 'dw.todayDefect': "Today's Defects",
+  'dw.myWo': 'My Work Orders', 'dw.noWo': 'No assigned work orders.',
+  'dw.myProdToday': "Today's Production", 'dw.noProd': 'No production recorded today.',
+  'dw.actual': 'Actual', 'dw.defect': 'Defect', 'dw.eqStatus': 'Equipment Status',
+  'dw.running': 'Running', 'dw.breakdown': 'Down', 'dw.maint': 'Maint.', 'dw.unitEa': 'EA',
+
+  // AI insight
+  'ai.title': 'AI Production Insight',
+  'ai.generate': 'Generate', 'ai.regen': 'Regenerate', 'ai.analyzing': 'Analyzing...',
+  'ai.highlight': 'Key Highlights', 'ai.caution': 'Attention', 'ai.suggestion': 'Suggestions',
+  'ai.autoHint': 'Auto-analyzes after KPI data loads',
+  'ai.analyzingLong': "Analyzing this month's KPIs...",
+  'ai.tokenUsage': 'Token usage', 'ai.tokenIn': 'In', 'ai.tokenOut': 'Out', 'ai.tokenTotal': 'Total',
+  'ai.remaining': '{n} left today', 'ai.generatedSuffix': '',
+
+  // Andon widget
+  'andon.title': 'Live Line Status (Andon)',
+  'andon.live': 'LIVE', 'andon.connecting': 'Connecting',
+  'andon.st.RUNNING': 'Running', 'andon.st.IDLE': 'Idle', 'andon.st.MAINTENANCE': 'Maint.', 'andon.st.BREAKDOWN': 'Down',
+  'andon.noEq': 'No equipment registered', 'andon.loadingData': 'Loading live data...',
+
+  // Notification center
+  'noti.tabAlerts': 'Alerts', 'noti.tabNews': 'News',
+  'noti.live': 'Live', 'noti.connecting': 'Connecting',
+  'noti.noAlerts': 'No alerts.', 'noti.latest': 'Latest',
+
+  // New version toast
+  'upd.title': 'A new version is available', 'upd.desc': 'Refresh to apply the latest features.',
+  'upd.refresh': 'Refresh', 'upd.later': 'Later',
+
+  // Document output
+  'doc.title': 'Document Output',
+  'doc.printPlan': 'To print', 'doc.pages': '{n} pages', 'doc.print': 'Print',
+  'doc.groupPeriod': 'Period-based', 'doc.noCondition': 'No condition',
+  'doc.groupTarget': 'Target required', 'doc.extraCondition': 'Extra condition',
+  'doc.selectPrompt': 'Select documents on the left.', 'doc.loading': 'Loading…',
+  'doc.targetSelect': 'Select targets', 'doc.targetCount': '{n} selected',
+  'doc.pickerSearch': 'Search', 'doc.pickerSelectAll': 'Select all',
+  'doc.pickerCount': '{n}', 'doc.pickerNone': 'No targets.',
+  'doc.pickerSelected': '{n} selected', 'doc.pickerApply': 'Apply {n}',
+  'doc.printConfirm': 'Print {n} pages. Continue?',
+  'doc.tpl.prodReport': 'Production Report', 'doc.tpl.qaCert': 'QA Certificate',
+  'doc.tpl.woOrder': 'Work Order', 'doc.tpl.eqCheck': 'Equipment Check',
+  'doc.pick.woTitle': 'Select Work Order', 'doc.pick.eqTitle': 'Select Equipment',
+
+  // Common UI
+  'ui.fav': 'Favorite', 'ui.favOff': 'Remove favorite', 'ui.close': 'Close', 'ui.sort': 'Sort',
+
+  // Panels (split/tabs)
+  'panel.pin': 'Pin tab', 'panel.pinOff': 'Unpin',
+  'panel.closeAll': 'Close all except pinned', 'panel.split': 'Split view', 'panel.splitClose': 'Close split',
+
+  // Form controls
+  'form.selectItem': 'Select item',
+
+  // AI Vision Monitor
+  'vm.title': 'AI Vision Monitor',
+  'vm.phoneConnected': 'Phone camera connected', 'vm.camWait': 'Camera standby',
+  'vm.aiReady': 'AI ready', 'vm.aiError': 'AI error', 'vm.aiLoading': 'AI loading',
+  'vm.modelFail': 'AI model load failed (check network)', 'vm.reason': 'Reason',
+  'vm.connectReq': 'Phone camera connection request', 'vm.showThis': 'Show this camera feed?',
+  'vm.allow': 'Allow', 'vm.block': 'Block', 'vm.blocked': 'Blocked', 'vm.changeAllow': 'Change to allow',
+  'vm.waiting': 'Waiting for phone camera...', 'vm.scanHint': 'Scan the QR on the right with your phone to start the camera',
+  'vm.modelLoading': 'Loading AI model...',
+  'vm.phoneConn': 'Phone Camera Connection', 'vm.qrAlt': 'Camera connection QR',
+  'vm.recognized': 'Detected Objects', 'vm.count': '{n}',
+  'vm.noObj': 'No objects detected.', 'vm.waitFrame': 'Waiting for video...',
+  'vm.footer': 'Recognizes 80 common objects (COCO-SSD). Product/defect-specific detection requires a custom-trained model.',
+
+  // Public phone camera page (/m/cam)
+  'pc.title': 'Camera Streaming', 'pc.on': 'Streaming', 'pc.wait': 'Waiting',
+  'pc.start': 'Start Camera', 'pc.tapHint': 'Tap to request camera permission',
+  'pc.opening': 'Opening camera...', 'pc.retry': 'Retry',
+  'pc.noCam': 'Camera is not available here. (HTTPS or localhost required)',
+  'pc.denied': 'Camera permission denied. Allow it in browser settings and try again.',
+  'pc.startFail': 'Cannot start the camera.',
+  'pc.footer1': 'Keep this screen on to stream live video to the PC monitor.',
+  'pc.footer2': 'Point the camera at equipment/products to run AI detection on the PC.',
+
+  // Public LOT view page (/m/lot)
+  'pl.loading': 'Loading LOT information...',
+  'pl.notFound': 'LOT not found', 'pl.notFoundDesc': 'No information for LOT {n}.',
+  'pl.brand': 'LOT Tracking', 'pl.mobileView': 'Mobile view',
+  'pl.itemCode': 'Item No.', 'pl.itemName': 'Item Name', 'pl.orderId': 'Order ID',
+  'pl.qty': 'Qty', 'pl.openedAt': 'Opened', 'pl.closedAt': 'Closed',
+  'pl.procHistory': 'Process History', 'pl.noProc': 'No processes registered.',
+  'pl.qaTitle': 'Quality Inspection', 'pl.noQa': 'No inspection history.',
+  'pl.bomTitle': 'Materials (BOM)', 'pl.noBom': 'No component materials registered.',
+  'pl.good': 'Good', 'pl.inspect': 'Inspection', 'pl.passed': 'Passed',
+  'pl.pass': 'Pass', 'pl.fail': 'Fail', 'pl.footer': 'QR Scan · Read-only view',
+
+  // QR scanner
+  'qr.title': 'QR Scan',
+  'qr.noCam': 'Camera is not available in this browser/context. (HTTPS required)',
+  'qr.denied': 'Camera permission denied. Please allow it in browser settings.',
+  'qr.notFound': 'No available camera found.',
+  'qr.startFail': 'Cannot start the camera.',
+  'qr.opening': 'Opening camera...',
+  'qr.guide': 'Align the LOT QR within the frame to scan automatically.',
+
+  // Widgets (registry labels + edit UI + utilities)
+  'widget.portfolio': 'Portfolio', 'widget.kpi': 'Monthly KPI', 'widget.prod': 'Daily Production',
+  'widget.inv': 'Material Stock', 'widget.ai': 'AI Insight', 'widget.andon': 'Live Andon',
+  'widget.worker': "Today's Work",
+  'widget.calc': 'Calculator', 'widget.memo': 'Memo', 'widget.todo': 'To-Do',
+  'widget.clock': 'Clock / Date', 'widget.timer': 'Timer',
+  'widget.edit': 'Edit widgets', 'widget.editDone': 'Done',
+  'widget.addHint': 'click: add · drag: place',
+  'widget.move': 'Move', 'widget.hide': 'Hide',
+  'widget.emptyEdit': 'No widgets. Add them from "Add widget" on the right sidebar.',
+  'widget.emptyMobile': 'No widgets to show.',
+  'widget.pause': 'Pause', 'widget.start': 'Start', 'widget.reset': 'Reset',
+  'widget.memoPh': 'Type a memo… (auto-saved)',
+  'widget.todoPh': 'Add a task…', 'widget.todoEmpty': 'No tasks.',
+  'widget.dow': 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
+
+  // Portfolio widget
+  'pf.intro': 'A full-stack MES portfolio project integrating work orders, production, inventory, and quality for automotive parts manufacturing.',
+  'pf.features': 'Key Features', 'pf.tech': 'Tech Stack',
+  'pf.f.wo.label': 'Work Orders & Production', 'pf.f.wo.desc': 'From orders/assignment to output with backflush stock updates',
+  'pf.f.inv.label': 'Inventory', 'pf.f.inv.desc': 'Real-time in/out and stock status',
+  'pf.f.qa.label': 'Quality Inspection', 'pf.f.qa.desc': 'Incoming, in-process, and final inspection',
+  'pf.f.bom.label': 'BOM & Process Flow', 'pf.f.bom.desc': 'Material requirements and process routing',
+  'pf.f.lot.label': 'LOT Tracking (QR)', 'pf.f.lot.desc': 'Process history tracking + QR mobile view',
+  'pf.f.andon.label': 'Live Andon & Alerts', 'pf.f.andon.desc': 'Real-time equipment status & alerts via SSE',
+  'pf.f.ai.label': 'AI Production Insight', 'pf.f.ai.desc': 'Automated monthly KPI analysis report',
+  'pf.f.vision.label': 'AI Vision Monitor', 'pf.f.vision.desc': 'Live phone camera feed + object detection',
 }

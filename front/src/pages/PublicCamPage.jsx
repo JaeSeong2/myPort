@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Camera, Wifi, WifiOff, AlertTriangle, Loader2 } from 'lucide-react'
 import { wsUrl } from '../constants/api'
+import { useLanguage } from '../context/LanguageContext'
 
 const SEND_FPS = 8          // 초당 전송 프레임 수
 const FRAME_WIDTH = 480     // 전송 프레임 가로 해상도(축소로 대역폭 절약)
 
 export default function PublicCamPage() {
+  const { t } = useLanguage()
   const [params] = useSearchParams()
   const room = params.get('room') || 'default'
 
@@ -59,7 +61,7 @@ export default function PublicCamPage() {
   // 카메라 시작 — 모바일(특히 iOS)은 사용자 탭(제스처)에서 호출해야 안정적 - 2026-08-07
   const startCamera = async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCamState('error'); setErrMsg('이 환경에서는 카메라를 쓸 수 없습니다. (HTTPS 또는 localhost 필요)'); return
+      setCamState('error'); setErrMsg(t('pc.noCam')); return
     }
     setCamState('starting'); setErrMsg('')
     // 후면 카메라 우선 → 실패하면 아무 카메라로 폴백 - 2026-08-07
@@ -72,8 +74,8 @@ export default function PublicCamPage() {
       } catch (e) {
         setCamState('error')
         setErrMsg(e?.name === 'NotAllowedError'
-          ? '카메라 권한이 거부되었습니다. 브라우저 권한 설정에서 허용 후 다시 시도하세요.'
-          : `카메라를 시작할 수 없습니다. (${e?.name || ''} ${e?.message || ''})`)
+          ? t('pc.denied')
+          : `${t('pc.startFail')} (${e?.name || ''} ${e?.message || ''})`)
         return
       }
     }
@@ -92,7 +94,7 @@ export default function PublicCamPage() {
     return () => {
       clearInterval(timerRef.current)
       if (wsRef.current) { try { wsRef.current.close() } catch { /* noop */ } }
-      if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop())
+      if (streamRef.current) streamRef.current.getTracks().forEach((tr) => tr.stop())
     }
   }, [])
 
@@ -105,12 +107,12 @@ export default function PublicCamPage() {
             <span className="text-white text-xs font-bold">M</span>
           </div>
           <span className="text-sm font-semibold text-primary flex items-center gap-1.5">
-            <Camera size={15} /> 카메라 송출
+            <Camera size={15} /> {t('pc.title')}
           </span>
           <span className="ml-auto flex items-center gap-1 text-xs"
             style={{ color: wsOpen ? '#34d399' : '#9ca3af' }}>
             {wsOpen ? <Wifi size={13} /> : <WifiOff size={13} />}
-            {wsOpen ? '송출 중' : '연결 대기'}
+            {wsOpen ? t('pc.on') : t('pc.wait')}
           </span>
         </div>
 
@@ -124,14 +126,14 @@ export default function PublicCamPage() {
               <Camera size={30} className="text-white/70" />
               <button onClick={startCamera}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity cursor-pointer">
-                <Camera size={15} /> 카메라 시작
+                <Camera size={15} /> {t('pc.start')}
               </button>
-              <span className="text-xs text-white/60">탭하면 카메라 권한을 요청합니다</span>
+              <span className="text-xs text-white/60">{t('pc.tapHint')}</span>
             </div>
           )}
           {camState === 'starting' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/90">
-              <Loader2 size={22} className="animate-spin" /> <span className="text-xs">카메라 여는 중...</span>
+              <Loader2 size={22} className="animate-spin" /> <span className="text-xs">{t('pc.opening')}</span>
             </div>
           )}
           {camState === 'error' && (
@@ -140,7 +142,7 @@ export default function PublicCamPage() {
               <span className="text-xs leading-relaxed wrap-break-word">{errMsg}</span>
               <button onClick={startCamera}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity cursor-pointer">
-                다시 시도
+                {t('pc.retry')}
               </button>
             </div>
           )}
@@ -153,8 +155,8 @@ export default function PublicCamPage() {
         </div>
 
         <p className="text-xs text-muted text-center leading-relaxed">
-          이 화면을 켜두면 PC 관제 화면에 실시간 영상이 전송됩니다.<br />
-          카메라를 설비/제품에 비추면 PC에서 AI 객체 인식이 실행됩니다.
+          {t('pc.footer1')}<br />
+          {t('pc.footer2')}
         </p>
       </div>
     </div>
