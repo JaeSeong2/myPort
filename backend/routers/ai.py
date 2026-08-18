@@ -10,6 +10,9 @@ router = APIRouter(prefix="/api/ai", tags=["AI 인사이트"])
 # 환경변수로 토큰 용량 및 호출 횟수 제어
 AI_DAILY_LIMIT = int(os.getenv("AI_DAILY_LIMIT", "10"))
 AI_MAX_TOKENS  = int(os.getenv("AI_MAX_TOKENS", "600"))
+# 사용 모델 — 폐기 시 코드 수정 없이 Railway 환경변수(GROQ_MODEL)만 교체하면 됨 - 2026-08-18
+# (llama-3.3-70b-versatile은 2026-08-16 폐기 → 현행 프로덕션 모델로 기본값 변경)
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
 # IP당 날짜별 호출 횟수 추적
 _ai_call_log: dict = defaultdict(lambda: defaultdict(int))
@@ -165,16 +168,25 @@ async def ai_insight(request: Request):
     summary = await _build_summary(db)
     system_msg, prompt = _messages_for(summary, lang)
 
-    client   = AsyncGroq(api_key=api_key)
-    response = await client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {"role": "system", "content": system_msg},
-            {"role": "user",   "content": prompt},
-        ],
-        max_tokens=AI_MAX_TOKENS,
-        temperature=0.3,
-    )
+    client = AsyncGroq(api_key=api_key)
+    try:
+        response = await client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {"role": "system", "content": system_msg},
+                {"role": "user",   "content": prompt},
+            ],
+            max_tokens=AI_MAX_TOKENS,
+            temperature=0.3,
+        )
+    except Exception as e:
+        # Groq 호출 실패(키 만료 401·모델 폐기 400·네트워크 등)를 500이 아닌 명시적 오류로 반환 - 2026-08-18
+        # 미처리 500은 CORS 헤더가 빠져 브라우저에서 'CORS 에러'로 오인되므로 반드시 여기서 처리한다.
+        status = getattr(e, "status_code", None) or 502
+        reason = getattr(e, "message", None) or str(e)
+        msg = (f"AI generation failed ({status}): {reason}" if lang == "en"
+               else f"AI 생성 실패 ({status}): {reason}")
+        raise HTTPException(status_code=502, detail=msg)
 
     _ai_call_log[ip][today] += 1
 
