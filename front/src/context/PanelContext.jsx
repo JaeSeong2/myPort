@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import { useAuth } from './AuthContext'
 import { fetchPrefs, savePrefsSlice } from '../services/prefs'
+import { pageRegistry } from '../data/pageRegistry'
 
 // 서버 저장 슬라이스 키 — 사용자 환경설정 문서 내 필드명 - 2026-07-28
 const PANELS_KEY = 'mes_panels'
@@ -22,11 +23,12 @@ const savePanels = (userId, state) => {
   catch {}
 }
 
-// path 기준 중복 탭 제거 — 복원 시 기존에 저장된 중복 정리 및 안전장치 - 2026-07-06
+// path 기준 중복 탭 제거 + 유효 경로만 유지 — 복원 시 중복/폐경로 정리 안전장치 - 2026-07-06
+// URL 구조 은닉 개편(2026-08-18)으로 경로 코드가 바뀌어, 옛 경로로 저장된 탭은 여기서 걸러진다.
 const dedupeTabs = (tabs) => {
   const seen = new Set()
   return (Array.isArray(tabs) ? tabs : []).filter(
-    (t) => t && t.path && !seen.has(t.path) && seen.add(t.path)
+    (t) => t && t.path && pageRegistry[t.path] && !seen.has(t.path) && seen.add(t.path)
   )
 }
 

@@ -22,29 +22,31 @@ import ItemMgmt        from '../pages/modules/master-data/ItemMgmtPage'
 import BomMgmt         from '../pages/modules/master-data/BomMgmtPage'
 import VisionMonitor   from '../pages/modules/monitor/VisionMonitorPage'
 
-/** 경로 → 컴포넌트 매핑 (우측 패널 렌더링용) */
+/** 경로 → 컴포넌트 매핑 (우측 패널 렌더링용)
+ *  URL 구조 은닉(미관) — 키는 불투명 코드, menuConfig의 path와 1:1 일치해야 함 - 2026-08-18
+ *  (주석의 원래 모듈명은 유지보수용 참고. dashboard만 노출 경로 유지) */
 export const pageRegistry = {
-  '/main/dashboard':           DashboardPage,
-  '/main/work-order/status':   WOStatus,
-  '/main/work-order/create':   WOCreate,
-  '/main/work-order/assign':   WOAssign,
-  '/main/work-order/history':  WOHistory,
-  '/main/production/status':   ProdStatus,
-  '/main/production/register': ProdRegister,
-  '/main/production/report':   ProdReport,
-  '/main/equipment/status':    EqStatus,
-  '/main/equipment/history':   EqHistory,
-  '/main/equipment/pm':        EqPm,
-  '/main/quality/inspect':     QaInspect,
-  '/main/quality/defect':      QaDefect,
-  '/main/quality/spc':         QaSpc,
-  '/main/inventory/status':    InvStatus,
-  '/main/inventory/inout':     InvInout,
-  '/main/process/flow':        ProcFlow,
-  '/main/lot/tracking':        LotTracking,
-  '/main/monitor/vision':      VisionMonitor,
-  '/main/process/bom':         BomMgmt,
-  '/main/settings':            SysSettings,
-  '/main/settings/items':      ItemMgmt,
-  '/main/settings/users':      UserMgmt,
+  '/main/dashboard': DashboardPage,
+  '/main/wo7q':      WOStatus,     // work-order/status
+  '/main/wc3k':      WOCreate,     // work-order/create
+  '/main/wa2n':      WOAssign,     // work-order/assign
+  '/main/wh5c':      WOHistory,    // work-order/history
+  '/main/ps3v':      ProdStatus,   // production/status
+  '/main/pr9d':      ProdRegister, // production/register
+  '/main/rp3q':      ProdReport,   // production/report
+  '/main/eq2v':      EqStatus,     // equipment/status
+  '/main/eh8m':      EqHistory,    // equipment/history
+  '/main/ep4t':      EqPm,         // equipment/pm
+  '/main/qi5n':      QaInspect,    // quality/inspect
+  '/main/qd7w':      QaDefect,     // quality/defect
+  '/main/qs1h':      QaSpc,        // quality/spc
+  '/main/iv3p':      InvStatus,    // inventory/status
+  '/main/io9r':      InvInout,     // inventory/inout
+  '/main/pf6k':      ProcFlow,     // process/flow
+  '/main/lt6b':      LotTracking,  // lot/tracking
+  '/main/mv7k':      VisionMonitor,// monitor/vision
+  '/main/bm4k':      BomMgmt,      // process/bom
+  '/main/sy2x':      SysSettings,  // settings
+  '/main/im8x':      ItemMgmt,     // settings/items
+  '/main/us5g':      UserMgmt,     // settings/users
 }
