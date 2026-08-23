@@ -200,6 +200,9 @@ export default {
   'andon.live': 'LIVE', 'andon.connecting': 'Connecting',
   'andon.st.RUNNING': 'Running', 'andon.st.IDLE': 'Idle', 'andon.st.MAINTENANCE': 'Maint.', 'andon.st.BREAKDOWN': 'Down',
   'andon.noEq': 'No equipment registered', 'andon.loadingData': 'Loading live data...',
+  'andon.line.PRODUCTION': 'Production', 'andon.line.INSPECTION': 'Inspection',
+  'andon.line.UTILITY': 'Utility', 'andon.line.SAFETY': 'Safety', 'andon.line.OTHER': 'Other',
+  'andon.view.map': 'Map', 'andon.view.tile': 'Tiles',
 
   // Notification center
   'noti.tabAlerts': 'Alerts', 'noti.tabNews': 'News',

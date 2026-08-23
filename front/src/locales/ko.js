@@ -206,6 +206,9 @@ export default {
   'andon.live': 'LIVE', 'andon.connecting': '연결 중',
   'andon.st.RUNNING': '가동', 'andon.st.IDLE': '대기', 'andon.st.MAINTENANCE': '정비', 'andon.st.BREAKDOWN': '고장',
   'andon.noEq': '등록된 설비가 없습니다', 'andon.loadingData': '실시간 데이터 로딩 중...',
+  'andon.line.PRODUCTION': '생산 라인', 'andon.line.INSPECTION': '검사 라인',
+  'andon.line.UTILITY': '유틸리티', 'andon.line.SAFETY': '안전 설비', 'andon.line.OTHER': '기타 설비',
+  'andon.view.map': '라인맵', 'andon.view.tile': '타일',
 
   // 알림 센터
   'noti.tabAlerts': '알림', 'noti.tabNews': '새소식',

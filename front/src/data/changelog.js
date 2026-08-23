@@ -1,9 +1,15 @@
 // 앱 버전 및 변경이력(새소식) — 배포 시 APP_VERSION과 public/version.json을 함께 올린다 - 2026-08-07
 // · 새소식 탭: CHANGELOG를 표시, 마지막 본 버전(localStorage)과 APP_VERSION 비교로 미확인 배지
 // · 새버전 토스트: 서버의 version.json.version과 APP_VERSION 비교(불일치 시 새로고침 안내)
-export const APP_VERSION = '1.5.0'
+export const APP_VERSION = '1.6.0'
 
 export const CHANGELOG = [
+  {
+    version: '1.6.0', date: '2026-08-24',
+    items: [
+      '실시간 라인 현황 — 아이소메트릭 라인맵(2.5D) 추가',
+    ],
+  },
   {
     version: '1.5.0', date: '2026-08-13',
     items: [
