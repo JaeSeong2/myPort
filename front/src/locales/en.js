@@ -165,6 +165,8 @@ export default {
 
   // Common (added)
   'msg.loading': 'Loading...',
+  'msg.loadFail': 'Failed to load data', 'toast.retry': 'Retry',
+  'err.title': 'Something went wrong while rendering', 'err.reload': 'Reload',
 
   // Dashboard - KPI/charts
   'dash.kpiTitle': 'Monthly KPI Status',
@@ -203,6 +205,11 @@ export default {
   'andon.line.PRODUCTION': 'Production', 'andon.line.INSPECTION': 'Inspection',
   'andon.line.UTILITY': 'Utility', 'andon.line.SAFETY': 'Safety', 'andon.line.OTHER': 'Other',
   'andon.view.map': 'Map', 'andon.view.tile': 'Tiles',
+  // Command palette - 2026-08-24
+  'cmd.placeholder': 'Search pages & actions…', 'cmd.empty': 'No results', 'cmd.jump': 'Quick jump',
+  'cmd.selMove': 'Navigate', 'cmd.selOpen': 'Open', 'cmd.selClose': 'Close',
+  // Design style (skin) - 2026-08-24
+  'skin.title': 'Design style', 'skin.current': 'Current', 'skin.carbon': 'Carbon', 'skin.linear': 'Linear',
 
   // Notification center
   'noti.tabAlerts': 'Alerts', 'noti.tabNews': 'News',

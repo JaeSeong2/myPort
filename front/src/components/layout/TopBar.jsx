@@ -1,6 +1,6 @@
 // 상단 바 - 2026-05-23
 import { useEffect, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, Sun, Moon, ChevronDown, Check } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, Sun, Moon, ChevronDown, Check, Search } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
@@ -8,7 +8,7 @@ import NotificationCenter from './NotificationCenter'
 
 export default function TopBar({ sidebarOpen, onToggleSidebar, isMobile = false }) {
   const { theme, toggleTheme } = useTheme()
-  const { lang, setLanguage }  = useLanguage()
+  const { lang, setLanguage, t } = useLanguage()
   const { currentUser, users, switchUser, dropdownOpen, setDropdownOpen, dropRef } = useAuth()
   const [now, setNow] = useState(new Date())
 
@@ -30,7 +30,7 @@ export default function TopBar({ sidebarOpen, onToggleSidebar, isMobile = false 
     : 'bg-elevated text-muted border border-theme'
 
   return (
-    <header className="h-14 bg-surface border-b border-theme flex items-center shrink-0">
+    <header className="h-14 bg-surface border border-theme rounded-xl flex items-center shrink-0 elev-1">
       {/* 브랜드 영역 - 데스크탑은 사이드바 너비 맞춤, 모바일은 컴팩트 */}
       <div className={`flex items-center shrink-0 transition-all duration-200
         ${isMobile
@@ -97,7 +97,18 @@ export default function TopBar({ sidebarOpen, onToggleSidebar, isMobile = false 
 
         {/* 우측: 시간 + 언어 + 테마 + 알림 */}
         <div className="flex items-center gap-1">
-          <span className="text-secondary text-xs font-mono mr-3 hidden sm:block">{formatted}</span>
+          {/* 명령 팔레트 트리거 — Ctrl/Cmd+K - 2026-08-24 */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('command-palette:open'))}
+            title={t('cmd.jump')}
+            className="hover-lift hidden md:flex items-center gap-2 pl-2.5 pr-1.5 py-1.5 mr-2 rounded-lg border border-theme text-muted hover-text-primary hover-bg-elevated transition-colors cursor-pointer"
+          >
+            <Search size={13} className="shrink-0" />
+            <span className="text-xs">{t('cmd.placeholder')}</span>
+            <kbd className="text-[10px] border border-theme rounded px-1 py-0.5 ml-1">Ctrl K</kbd>
+          </button>
+
+          <span className="text-secondary text-xs font-mono mr-3 hidden lg:block">{formatted}</span>
 
           <button
             onClick={() => setLanguage(lang === 'ko' ? 'en' : 'ko')}
@@ -110,6 +121,8 @@ export default function TopBar({ sidebarOpen, onToggleSidebar, isMobile = false 
           <button onClick={toggleTheme} className={iconBtn} title={theme === 'dark' ? '라이트 모드' : '다크 모드'}>
             {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
           </button>
+          {/* 디자인 스타일(스킨) 선택기는 숨김 — 현재 스타일 고정. 스킨 시스템(ThemeContext/index.css)은 유지 - 2026-08-24 */}
+
           <NotificationCenter />
         </div>
       </div>

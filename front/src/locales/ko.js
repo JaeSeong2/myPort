@@ -171,6 +171,8 @@ export default {
 
   // 공통(추가)
   'msg.loading': '로딩 중...',
+  'msg.loadFail': '데이터를 불러오지 못했습니다', 'toast.retry': '재시도',
+  'err.title': '화면 표시 중 문제가 발생했습니다', 'err.reload': '새로고침',
 
   // 대시보드 - KPI/차트
   'dash.kpiTitle': '월간 KPI 현황',
@@ -209,6 +211,11 @@ export default {
   'andon.line.PRODUCTION': '생산 라인', 'andon.line.INSPECTION': '검사 라인',
   'andon.line.UTILITY': '유틸리티', 'andon.line.SAFETY': '안전 설비', 'andon.line.OTHER': '기타 설비',
   'andon.view.map': '라인맵', 'andon.view.tile': '타일',
+  // 명령 팔레트 - 2026-08-24
+  'cmd.placeholder': '페이지·기능 검색…', 'cmd.empty': '검색 결과가 없습니다', 'cmd.jump': '빠른 이동',
+  'cmd.selMove': '이동', 'cmd.selOpen': '열기', 'cmd.selClose': '닫기',
+  // 디자인 스타일(스킨) - 2026-08-24
+  'skin.title': '디자인 스타일', 'skin.current': '현재', 'skin.carbon': 'Carbon 산업형', 'skin.linear': 'Linear 모던',
 
   // 알림 센터
   'noti.tabAlerts': '알림', 'noti.tabNews': '새소식',

@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
-* { font-family: 'Inter', sans-serif; }
+/* 폰트 — 라틴=Inter, 한글은 시스템/Pretendard 폴백(글리프 단위 대체). 전역 body에 적용 - 2026-08-24 */
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 
 /* ── 다크 테마 (기본) ── */
 :root {
@@ -8,8 +14,9 @@
   --bg-surface:     #14161E;
   --bg-elevated:    #1E2130;
   --bg-hover:       #272B3D;
-  --border:         #2C3050;
-  --border-subtle:  #222540;
+  /* 경계선 — 탁한 보라빛 완화 + 대비↑ 로 또렷하게(모던·선명) - 2026-08-24 */
+  --border:         #3A4066;
+  --border-subtle:  #2A2E47;
   --text-primary:   #DFE4F0;
   --text-secondary: #7B84A0;
   --text-muted:     #4A5070;
@@ -21,6 +28,17 @@
   --danger-subtle:  rgba(248, 113, 113, 0.1);
   --success:        #4ADE80;
   --warning:        #FBBF24;
+
+  /* ── 타이포·형태·깊이 토큰 (테마 공통) - 2026-08-24 ── */
+  --font-sans: 'Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  /* 다크: 검정 기반 그림자를 진하게 — 어두운 배경에서도 보이도록 */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-2: 0 6px 16px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
 
 /* ── 라이트 테마 ── */
@@ -29,8 +47,9 @@
   --bg-surface:     #FFFFFF;
   --bg-elevated:    #F5F6FC;
   --bg-hover:       #ECEDF6;
-  --border:         #D8DCF0;
-  --border-subtle:  #E4E8F4;
+  /* 경계선 — 연한 라벤더 → 더 또렷한 뉴트럴 그레이(모던·선명) - 2026-08-24 */
+  --border:         #C7CCDE;
+  --border-subtle:  #E1E4EE;
   --text-primary:   #1C2033;
   --text-secondary: #6470A0;
   --text-muted:     #9AA0BC;
@@ -42,7 +61,63 @@
   --danger-subtle:  rgba(239, 68, 68, 0.08);
   --success:        #16A34A;
   --warning:        #D97706;
+
+  /* 라이트: 부드러운 남색 기반 그림자 */
+  --shadow-1: 0 1px 2px rgba(28, 32, 51, 0.06);
+  --shadow-2: 0 6px 16px rgba(28, 32, 51, 0.10);
+  --shadow-3: 0 18px 44px rgba(28, 32, 51, 0.16);
 }
+
+/* ══════════════════════════════════════════════════════════
+   디자인 방향(스킨) — data-skin 별 토큰 오버라이드 - 2026-08-24
+   theme(다크/라이트) × skin(current/carbon/linear) = 6조합
+   current = 기본(:root / [data-theme=light]). carbon·linear만 정의.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Carbon 산업형 (다크) — 쿨그레이·강한 경계·플랫·IBM Plex ── */
+:root[data-skin="carbon"] {
+  --bg-base:#161616; --bg-surface:#262626; --bg-elevated:#393939; --bg-hover:#4A4A4A;
+  --border:#525252; --border-subtle:#393939;
+  --text-primary:#F4F4F4; --text-secondary:#C6C6C6; --text-muted:#8D8D8D;
+  --accent:#4589FF; --accent-hover:#6BA5FF; --accent-subtle:rgba(69,137,255,0.16); --accent-border:rgba(69,137,255,0.4);
+  --danger:#FA4D56; --danger-subtle:rgba(250,77,86,0.14); --success:#42BE65; --warning:#F1C21B;
+  --font-sans:'IBM Plex Sans','Malgun Gothic',system-ui,sans-serif;
+  --shadow-1:0 1px 0 rgba(0,0,0,0.40); --shadow-2:0 2px 6px rgba(0,0,0,0.32); --shadow-3:0 4px 10px rgba(0,0,0,0.4);
+}
+/* Carbon (라이트) */
+:root[data-skin="carbon"][data-theme="light"] {
+  --bg-base:#F4F4F4; --bg-surface:#FFFFFF; --bg-elevated:#FFFFFF; --bg-hover:#E8E8E8;
+  --border:#C6C6C6; --border-subtle:#E0E0E0;
+  --text-primary:#161616; --text-secondary:#525252; --text-muted:#8D8D8D;
+  --accent:#0F62FE; --accent-hover:#0353E9; --accent-subtle:rgba(15,98,254,0.10); --accent-border:rgba(15,98,254,0.3);
+  --danger:#DA1E28; --danger-subtle:rgba(218,30,40,0.08); --success:#24A148; --warning:#B28600;
+  --shadow-1:0 1px 0 rgba(0,0,0,0.08); --shadow-2:0 2px 6px rgba(22,22,22,0.10); --shadow-3:0 4px 10px rgba(22,22,22,0.12);
+}
+
+/* ── Linear 모던 (다크) — 순수 모노크롬·바이올렛 절제·헤어라인·깊은 그림자 ── */
+:root[data-skin="linear"] {
+  --bg-base:#0A0A0B; --bg-surface:#131316; --bg-elevated:#1C1C21; --bg-hover:#242429;
+  --border:rgba(255,255,255,0.07); --border-subtle:rgba(255,255,255,0.045);
+  --text-primary:#F7F7F8; --text-secondary:#A0A0A8; --text-muted:#63636B;
+  --accent:#7A5AF8; --accent-hover:#9179FF; --accent-subtle:rgba(122,90,248,0.15); --accent-border:rgba(122,90,248,0.4);
+  --danger:#F87171; --danger-subtle:rgba(248,113,113,0.12); --success:#34D399; --warning:#FBBF24;
+  --shadow-1:0 2px 6px rgba(0,0,0,0.5); --shadow-2:0 10px 30px rgba(0,0,0,0.55); --shadow-3:0 20px 50px rgba(0,0,0,0.6);
+}
+/* Linear (라이트) */
+:root[data-skin="linear"][data-theme="light"] {
+  --bg-base:#FAFAFA; --bg-surface:#FFFFFF; --bg-elevated:#FFFFFF; --bg-hover:#F1F1F3;
+  --border:rgba(10,10,15,0.08); --border-subtle:rgba(10,10,15,0.05);
+  --text-primary:#111114; --text-secondary:#5B5B63; --text-muted:#9494A0;
+  --accent:#6E56F0; --accent-hover:#5A44D8; --accent-subtle:rgba(110,86,240,0.08); --accent-border:rgba(110,86,240,0.3);
+  --danger:#DC2626; --danger-subtle:rgba(220,38,38,0.08); --success:#16A34A; --warning:#D97706;
+  --shadow-1:0 2px 6px rgba(20,20,45,0.06); --shadow-2:0 10px 30px rgba(20,20,45,0.10); --shadow-3:0 20px 50px rgba(20,20,45,0.13);
+}
+
+/* Carbon 각진 모서리 — Tailwind rounded-* 오버라이드(둥근 pill/dot는 유지) - 2026-08-24 */
+:root[data-skin="carbon"] .rounded-md,
+:root[data-skin="carbon"] .rounded-lg  { border-radius: 2px; }
+:root[data-skin="carbon"] .rounded-xl  { border-radius: 3px; }
+:root[data-skin="carbon"] .rounded-2xl { border-radius: 4px; }
 
 /* ── 시맨틱 유틸리티 클래스 ── */
 @layer utilities {
@@ -74,7 +149,46 @@
 
   .divider { border-color: var(--border); }
 
+  /* 깊이(elevation) — 테마 대응 그림자 토큰. 기존 Tailwind shadow-*도 재매핑해
+     다크모드에서도 그림자가 보이도록 통일 - 2026-08-24 */
+  .elev-1 { box-shadow: var(--shadow-1); }
+  .elev-2 { box-shadow: var(--shadow-2); }
+  .elev-3 { box-shadow: var(--shadow-3); }
+  .shadow-sm  { box-shadow: var(--shadow-1) !important; }
+  .shadow-lg  { box-shadow: var(--shadow-2) !important; }
+  .shadow-xl  { box-shadow: var(--shadow-2) !important; }
+  .shadow-2xl { box-shadow: var(--shadow-3) !important; }
+
+  /* 숫자 자릿수 폭 고정 — 표·KPI·시간 등 정렬 안정화 - 2026-08-24 */
+  .tnum { font-variant-numeric: tabular-nums; }
+
   .animate-fade-in { animation: fadeInDown 0.2s ease; }
+
+  /* 명령 팔레트 진입 애니메이션 - 2026-08-24 */
+  .animate-overlay-in { animation: cmdOverlayIn 0.14s ease; }
+  .animate-pop-in     { animation: cmdPopIn 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
+
+  /* 미세 인터랙션 — 호버 시 살짝 떠오르는 카드/버튼 - 2026-08-24 */
+  .hover-lift { transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease; }
+  .hover-lift:hover { transform: translateY(-2px); }
+
+  /* 토스트 진입 애니메이션(우하단에서 슬라이드) - 2026-08-24 */
+  .animate-toast-in { animation: toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
+
+  /* 타자(스트리밍) 캐럿 — AI 인사이트 타이핑 커서 - 2026-08-24 */
+  .type-caret {
+    display: inline-block; width: 2px; height: 1em; margin-left: 1px;
+    vertical-align: text-bottom; background: currentColor;
+    animation: caretBlink 0.9s step-end infinite;
+  }
+
+  /* 스켈레톤 로딩 — 테마 대응 shimmer - 2026-08-24 */
+  .skeleton { position: relative; overflow: hidden; background: var(--bg-elevated); border-radius: 6px; }
+  .skeleton::after {
+    content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.18), transparent);
+    animation: skeletonShimmer 1.4s infinite;
+  }
 
   /* 스크롤은 유지하되 스크롤바만 숨김 — 위젯 래퍼 div 영역에 사용 - 2026-07-25 */
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
@@ -86,11 +200,35 @@
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes skeletonShimmer { 100% { transform: translateX(100%); } }
+@keyframes caretBlink { 50% { opacity: 0; } }
+
+@keyframes cmdOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cmdPopIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 접근성 — 모션 최소화 선호 시 애니메이션/전환 억제 - 2026-08-24 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hover-lift:hover { transform: none; }
+}
+
 /* ── react-grid-layout 테마 - 2026-07-25 ── */
 .react-grid-item.react-grid-placeholder {
   background: var(--accent) !important;
   opacity: 0.15 !important;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
 }
 .react-grid-item.react-grid-placeholder.placeholder-resizing {
   opacity: 0.22 !important;
@@ -105,6 +243,35 @@
 .react-grid-item.resizing {
   transition: none !important;
   z-index: 20;
+}
+
+/* ── 분할 화면 구분선 — 모던 인터랙티브 리사이저 - 2026-08-24 ──
+   평소엔 얇은 hairline, hover/드래그 시 accent + 은은한 글로우 (넓은 히트 영역) */
+.panel-sep {
+  position: relative;
+  width: 7px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: transparent;
+  align-self: stretch;
+}
+.panel-sep::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--border);
+  transition: width .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.panel-sep:hover::before,
+.panel-sep:active::before,
+.panel-sep[data-resize-handle-active]::before,
+.panel-sep[data-resize-handle-state="hover"]::before,
+.panel-sep[data-resize-handle-state="drag"]::before {
+  width: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-subtle), 0 0 10px var(--accent-subtle);
 }
 
 /* 다중 문서 미리보기 간격(화면 전용) - 2026-08-07 */

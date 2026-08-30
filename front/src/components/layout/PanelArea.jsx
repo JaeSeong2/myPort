@@ -4,6 +4,7 @@ import { Group as PanelGroup, Panel, Separator } from 'react-resizable-panels'
 import { X, Columns2, XSquare, Bookmark } from 'lucide-react'
 import { menuConfig } from '../../data/menuConfig'
 import { pageRegistry } from '../../data/pageRegistry'
+import ErrorBoundary from '../common/ErrorBoundary'
 import { usePanelContext } from '../../context/PanelContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useIsMobile } from '../../hooks/useBreakpoint'
@@ -123,17 +124,23 @@ export default function PanelArea() {
       )}
 
       {splitEnabled && !isTabletDown ? (
+        // 분할 패널 = base 채널 위에 떠 있는 surface 카드(개별 화면처럼) - 2026-08-30
         <PanelGroup
           orientation="horizontal"
           style={{ height: '100%' }}
+          className="bg-base"
           // 저장된 분할 사이즈 복원(없으면 50:50) — 드래그 종료 시 저장 - 2026-07-28
           defaultLayout={splitLayout ?? undefined}
           onLayoutChanged={(layout) => setSplitLayout(layout)}
         >
           <Panel id="left" defaultSize={50} minSize={20}>
-            <div className="h-full flex flex-col" onMouseDown={() => setActivePanel('left')}>
+            <div
+              className="h-full flex flex-col rounded-xl border border-theme bg-surface elev-1 overflow-hidden mr-1"
+              onMouseDown={() => setActivePanel('left')}
+            >
               <TabBar
                 side="left"
+                floating
                 tabs={leftTabs}
                 activeTab={activeLeftTab}
                 isActive={activePanel === 'left'}
@@ -151,14 +158,16 @@ export default function PanelArea() {
             </div>
           </Panel>
 
-          <Separator
-            style={{ width: '2px', backgroundColor: 'var(--accent)', cursor: 'col-resize', flexShrink: 0 }}
-          />
+          <Separator className="panel-sep" />
 
           <Panel id="right" defaultSize={50} minSize={20}>
-            <div className="h-full flex flex-col" onMouseDown={() => setActivePanel('right')}>
+            <div
+              className="h-full flex flex-col rounded-xl border border-theme bg-surface elev-1 overflow-hidden ml-1"
+              onMouseDown={() => setActivePanel('right')}
+            >
               <TabBar
                 side="right"
+                floating
                 tabs={rightTabs}
                 activeTab={activeRightTab}
                 isActive={activePanel === 'right'}
@@ -205,7 +214,7 @@ export default function PanelArea() {
  * 탭바 - 같은 패널 내 정렬, 반대 패널로 드래그 이동 지원
  * @date 2026-05-23
  */
-function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTabClose, onReorder, onTogglePin, onCrossMove, onClose, onSplit, onCloseAll }) {
+function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTabClose, onReorder, onTogglePin, onCrossMove, onClose, onSplit, onCloseAll, floating = false }) {
   const { t } = useLanguage()
   const [dragOverIdx, setDragOverIdx] = useState(null)
   const [dragOverBar, setDragOverBar] = useState(false)
@@ -268,13 +277,15 @@ function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTab
 
   return (
     <div
-      className="flex items-center bg-base border-b border-theme px-2 gap-1 min-h-15 shrink-0"
+      className={`flex items-center px-1.5 gap-1 min-h-12 shrink-0 ${floating ? 'bg-surface' : 'bg-base'}`}
       style={{ borderTop: `2px solid ${isActive ? 'var(--accent)' : 'transparent'}` }}
       onDragOver={handleBarDragOver}
       onDrop={handleBarDrop}
     >
-      <div className={`flex items-center gap-0.5 flex-1 overflow-x-auto rounded transition-colors ${dragOverBar ? 'bg-accent-subtle' : ''}`}>
-        {tabs.map((tab, idx) => (
+      <div className={`flex items-center gap-0.5 flex-1 overflow-x-auto overflow-y-hidden rounded transition-colors ${dragOverBar ? 'bg-accent-subtle' : ''}`}>
+        {tabs.map((tab, idx) => {
+          const active = activeTab === tab.path
+          return (
           <div
             key={tab.path}
             draggable
@@ -284,68 +295,85 @@ function TabBar({ side, tabs, activeTab, isActive, sharedDrag, onTabClick, onTab
             onDragEnd={handleDragEnd}
             onMouseDown={(e) => { e.stopPropagation(); onTabClick(tab.path) }}
             className={`
-              flex items-center gap-2 px-4 py-3 rounded-md text-xs cursor-pointer whitespace-nowrap select-none transition-all
-              ${activeTab === tab.path ? 'bg-elevated text-primary' : 'text-muted hover-text-primary hover-bg-elevated'}
+              group relative flex items-center gap-1.5 pl-3 pr-2 h-8 rounded-lg text-xs cursor-pointer whitespace-nowrap select-none transition-colors
+              ${active ? 'bg-elevated text-primary font-medium' : 'text-secondary hover-text-primary hover-bg-elevated'}
               ${dragOverIdx === idx && sharedDrag.current?.side !== side ? 'ring-1 ring-accent' : ''}
             `}
             style={{ opacity: sharedDrag.current?.path === tab.path ? 0.4 : 1 }}
           >
-            {LABEL_KEY_BY_PATH[tab.path] ? t(LABEL_KEY_BY_PATH[tab.path]) : tab.label}
-            {/* 탭 고정/해제 토글 — 고정 시 accent 색 채움 - 2026-07-24 */}
+            <span className="truncate max-w-40">
+              {LABEL_KEY_BY_PATH[tab.path] ? t(LABEL_KEY_BY_PATH[tab.path]) : tab.label}
+            </span>
+
+            {/* 고정 토글 — 고정 시 항상 표시(amber), 아니면 hover 시 노출 - 2026-07-24 */}
             <button
               onMouseDown={(e) => { e.stopPropagation(); onTogglePin?.(tab.path) }}
               title={tab.pinned ? t('panel.pinOff') : t('panel.pin')}
-              className={`transition-colors cursor-pointer rounded p-0.5 ${tab.pinned ? '' : 'text-muted hover-text-primary'}`}
+              className={`shrink-0 rounded p-0.5 transition-colors cursor-pointer
+                ${tab.pinned ? 'opacity-100' : 'hidden group-hover:inline-flex text-muted hover-text-primary'}`}
               style={tab.pinned ? { color: 'rgba(251,191,36,0.5)' } : undefined}
             >
-              <Bookmark size={13} fill={tab.pinned ? 'currentColor' : 'none'} />
+              <Bookmark size={12} fill={tab.pinned ? 'currentColor' : 'none'} />
             </button>
-            {/* 고정 탭은 X 숨김 → 실수 닫기 방지 - 2026-07-24 */}
+
+            {/* 닫기 — 고정 아니면 활성/hover 시 노출 - 2026-07-24 */}
             {!tab.pinned && (
               <button
                 onMouseDown={(e) => { e.stopPropagation(); onTabClose(tab.path) }}
-                className="hover-text-danger transition-colors cursor-pointer rounded p-0.5"
+                className={`shrink-0 rounded p-0.5 text-muted hover-text-danger transition-colors cursor-pointer
+                  ${active ? 'inline-flex' : 'hidden group-hover:inline-flex'}`}
               >
-                <X size={13} />
+                <X size={12} />
               </button>
             )}
           </div>
-        ))}
+          )
+        })}
       </div>
 
-      {onCloseAll && (
-        <button
-          onClick={onCloseAll}
-          title={t('panel.closeAll')}
-          className="p-1.5 rounded-md text-muted hover-text-danger hover-bg-elevated transition-colors shrink-0 cursor-pointer"
-        >
-          <XSquare size={15} />
-        </button>
-      )}
-      {onSplit && (
-        <button
-          onClick={onSplit}
-          title={t('panel.split')}
-          className="p-1.5 rounded-md text-muted hover-text-primary hover-bg-elevated transition-colors shrink-0 cursor-pointer"
-        >
-          <Columns2 size={15} />
-        </button>
-      )}
-      {onClose && (
-        <button
-          onMouseDown={(e) => { e.stopPropagation(); onClose() }}
-          title={t('panel.splitClose')}
-          className="p-1 rounded-md text-muted hover-text-danger transition-colors cursor-pointer shrink-0"
-        >
-          <X size={14} />
-        </button>
+      {/* 우측 액션 — 탭 목록과 얇은 구분선으로 분리 - 2026-08-30 */}
+      {(onCloseAll || onSplit || onClose) && (
+        <div className="flex items-center gap-0.5 pl-1.5 ml-1 border-l border-subtle-theme shrink-0">
+          {onCloseAll && (
+            <button
+              onClick={onCloseAll}
+              title={t('panel.closeAll')}
+              className="p-1.5 rounded-md text-muted hover-text-danger hover-bg-elevated transition-colors cursor-pointer"
+            >
+              <XSquare size={15} />
+            </button>
+          )}
+          {onSplit && (
+            <button
+              onClick={onSplit}
+              title={t('panel.split')}
+              className="p-1.5 rounded-md text-muted hover-text-primary hover-bg-elevated transition-colors cursor-pointer"
+            >
+              <Columns2 size={15} />
+            </button>
+          )}
+          {onClose && (
+            <button
+              onMouseDown={(e) => { e.stopPropagation(); onClose() }}
+              title={t('panel.splitClose')}
+              className="p-1.5 rounded-md text-muted hover-text-danger hover-bg-elevated transition-colors cursor-pointer"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
       )}
     </div>
   )
 }
 
 function PageContent({ path }) {
-  if (!path) return <DashboardPage />
-  const Component = pageRegistry[path]
-  return Component ? <Component /> : <DashboardPage />
+  const Component = (!path ? DashboardPage : pageRegistry[path]) ?? DashboardPage
+  // 페이지 단위 에러 경계 — 한 페이지 크래시가 앱 전체를 백색 화면으로 만들지 않도록.
+  // key={path} 로 페이지 전환 시 경계 상태 초기화 - 2026-08-24
+  return (
+    <ErrorBoundary key={path}>
+      <Component />
+    </ErrorBoundary>
+  )
 }

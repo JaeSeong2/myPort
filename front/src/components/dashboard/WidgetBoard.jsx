@@ -19,14 +19,14 @@ function EditToggle({ editMode, setEditMode, t }) {
       onClick={() => setEditMode((v) => !v)}
       title={editMode ? t('widget.editDone') : t('widget.edit')}
       aria-label={editMode ? t('widget.editDone') : t('widget.edit')}
-      className="flex items-center justify-center w-9 h-9 rounded-xl transition-all active:scale-95"
+      className="flex items-center justify-center w-7 h-7 rounded-lg transition-all active:scale-95"
       style={editMode
         ? { background: 'color-mix(in srgb, #34d399 15%, transparent)', color: '#34d399', border: '1px solid color-mix(in srgb, #34d399 35%, transparent)' }
         : { background: accentTint(10), color: 'var(--accent)', border: `1px solid ${accentTint(28)}` }}
     >
       {editMode
-        ? <Check size={16} strokeWidth={2.5} />
-        : <SlidersHorizontal size={16} strokeWidth={2.5} />}
+        ? <Check size={15} strokeWidth={2.5} />
+        : <SlidersHorizontal size={15} strokeWidth={2.5} />}
     </button>
   )
 }
@@ -50,9 +50,9 @@ function Palette({ hiddenWidgets, addWidget, iconOf, onDragWidgetStart, onDragWi
             }}
             onDragEnd={onDragWidgetEnd}
             title={`${label} (${t('widget.addHint')})`} aria-label={label}
-            className="flex items-center justify-center w-9 h-9 rounded-xl border border-theme bg-base transition-all cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-sm hover:border-(--accent)"
+            className="flex items-center justify-center w-7 h-7 rounded-lg border border-theme bg-base transition-all cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-sm hover:border-(--accent)"
             style={{ color: 'var(--accent)' }}>
-            {Icon && <Icon size={16} strokeWidth={2.2} />}
+            {Icon && <Icon size={15} strokeWidth={2.2} />}
           </button>
         )
       })}
@@ -194,7 +194,7 @@ export default function WidgetBoard({ grid, content }) {
 
       {/* 오른쪽 사이드바 — 위젯 편집 버튼 + (편집 시) 위젯 추가 아이콘 세로 정렬 - 2026-07-25 */}
       {canEdit && (
-        <aside className="w-14 shrink-0 border-l border-theme bg-base flex flex-col items-center pt-2 gap-3 overflow-y-auto">
+        <aside className="w-10 shrink-0 border-l border-subtle-theme bg-base flex flex-col items-center pt-2 gap-3 overflow-y-auto">
           <EditToggle editMode={editMode} setEditMode={setEditMode} t={t} />
           {editMode && (
             <Palette

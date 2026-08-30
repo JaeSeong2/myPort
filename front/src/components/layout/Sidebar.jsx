@@ -65,12 +65,12 @@ export default function Sidebar({ open, isMobile = false }) {
     <>
     <aside
       className={`
-        bg-surface border-r border-theme flex flex-col overflow-hidden
+        bg-surface flex flex-col overflow-hidden
         ${isMobile
-          ? `fixed inset-y-0 left-0 z-50 h-full w-64 shrink-0
+          ? `fixed inset-y-0 left-0 z-50 h-full w-64 shrink-0 border-r border-theme
              transition-transform duration-200
              ${open ? 'translate-x-0' : '-translate-x-full'}`
-          : `relative shrink-0 transition-all duration-200
+          : `relative shrink-0 rounded-2xl border border-theme elev-2 transition-all duration-200
              ${open ? 'w-64' : 'w-14'}`
         }
       `}

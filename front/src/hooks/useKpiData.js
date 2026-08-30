@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { API_BASE } from '../constants/api'
 import { effectiveMonthRange } from '../utils/effectiveMonth'
 import { useLanguage } from '../context/LanguageContext'
+import { useToast } from '../context/ToastContext'
 
 const AI_API   = `${API_BASE}/api/ai/insight`
 const WO_API   = `${API_BASE}/api/work-orders`
@@ -27,7 +28,11 @@ const fmtDate = (d) => {
 }
 
 export function useKpiData() {
-  const { lang } = useLanguage() // AI 인사이트 생성/캐시 언어 - 2026-08-13
+  const { lang, t } = useLanguage() // AI 인사이트 생성/캐시 언어 - 2026-08-13
+  const toast = useToast()          // 오류 토스트 + 재시도 - 2026-08-24
+  // 최신 콜백 참조(재시도 버튼이 항상 최신 함수를 호출하도록) - 2026-08-24
+  const loadKpiRef   = useRef(null)
+  const reqInsightRef = useRef(null)
   const [kpi,       setKpi]       = useState({ wo: 0, ongoing: 0, lowStock: 0, passRate: '—', eqRunning: 0, eqBreakdown: 0 })
   const [prodChart, setProdChart] = useState([])
   const [invChart,  setInvChart]  = useState([])
@@ -107,10 +112,13 @@ export function useKpiData() {
       setInvChart(matStocks)
     } catch (e) {
       console.error(e)
+      // 데이터 로드 실패 → 재시도 토스트 - 2026-08-24
+      toast?.error(t('msg.loadFail'), { retry: () => loadKpiRef.current?.() })
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [toast, t])
+  loadKpiRef.current = loadKpi
 
   useEffect(() => { loadKpi() }, [loadKpi])
 
@@ -144,10 +152,13 @@ export function useKpiData() {
       }))
     } catch (e) {
       setAiError(e.message)
+      // AI 생성 실패 → 재시도 토스트 - 2026-08-24
+      toast?.error(e.message, { retry: () => reqInsightRef.current?.() })
     } finally {
       setAiLoading(false)
     }
-  }, [lang])
+  }, [lang, toast])
+  reqInsightRef.current = requestInsight
 
   // 언어 변경 시 해당 언어 캐시로 화면 동기화(없으면 비움) - 2026-08-13
   useEffect(() => {

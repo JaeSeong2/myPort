@@ -89,7 +89,7 @@ export default function Table({ columns, data = [], loading = false, emptyText, 
                 <tr key={i} className="border-b border-theme">
                   {columns.map(col => (
                     <td key={col.key} className="px-4 py-3">
-                      <div className="h-3 bg-elevated rounded animate-pulse" />
+                      <div className="skeleton h-3" />
                     </td>
                   ))}
                 </tr>
