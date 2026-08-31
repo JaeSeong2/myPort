@@ -257,7 +257,7 @@ export default {
   'vm.phoneConn': 'Phone Camera Connection', 'vm.qrAlt': 'Camera connection QR',
   'vm.recognized': 'Detected Objects', 'vm.count': '{n}',
   'vm.noObj': 'No objects detected.', 'vm.waitFrame': 'Waiting for video...',
-  'vm.footer': 'Recognizes 80 common objects (COCO-SSD). Product/defect-specific detection requires a custom-trained model.',
+  'vm.footer': 'Recognizes 80 common objects (YOLOv8n). Product/defect-specific detection requires a custom-trained model.',
 
   // Public phone camera page (/m/cam)
   'pc.title': 'Camera Streaming', 'pc.on': 'Streaming', 'pc.wait': 'Waiting',

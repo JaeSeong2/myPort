@@ -263,7 +263,7 @@ export default {
   'vm.phoneConn': '폰 카메라 연결', 'vm.qrAlt': '카메라 연결 QR',
   'vm.recognized': '인식된 사물', 'vm.count': '{n}개',
   'vm.noObj': '인식된 사물이 없습니다.', 'vm.waitFrame': '영상 수신 대기 중...',
-  'vm.footer': '일반 사물 80종 인식(COCO-SSD). 제품·불량 등 현장 특화 인식은 커스텀 학습 모델이 필요합니다.',
+  'vm.footer': '일반 사물 80종 인식(YOLOv8n). 제품·불량 등 현장 특화 인식은 커스텀 학습 모델이 필요합니다.',
 
   // 공개 폰 카메라 송출 페이지(/m/cam)
   'pc.title': '카메라 송출', 'pc.on': '송출 중', 'pc.wait': '연결 대기',
