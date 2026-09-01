@@ -11,6 +11,7 @@ import Modal      from '../../../components/containers/Modal'
 import { Field, Input, Select, Textarea, ItemSelect, PageTitle } from '../../../components/common/FormControls'
 import Badge, { STATUS_BADGE, TYPE_BADGE } from '../../../components/common/Badge'
 import { exportToExcel, parseExcelFile } from '../../../utils/excel'
+import { probeMonthRange } from '../../../utils/effectiveMonth'
 import { API_BASE } from '../../../constants/api'
 
 const API        = `${API_BASE}/api/work-orders`
@@ -52,6 +53,15 @@ export default function StatusPage() {
   const [editRow, setEditRow] = useState(null)
   const [form,    setForm]    = useState(initForm)
   const [saving,  setSaving]  = useState(false)
+  const [empMap,  setEmpMap]  = useState({})  // 담당자 코드→이름 (배정 화면과 표시 통일) - 2026-09-01
+
+  // 작업자 마스터 로드 → 담당자 컬럼을 이름으로 표시(작업 배정 보드와 연동 표시)
+  useEffect(() => {
+    fetch(`${MASTER_API}?category=employee&active_only=true`)
+      .then(r => r.json())
+      .then(j => setEmpMap(Object.fromEntries((j.data ?? []).map(e => [e.code, e.name]))))
+      .catch(() => {})
+  }, [])
 
   // 조건검색 필드 - 상태/유형은 하드코드, 품목코드는 기초정보 DB에서 로드
   const searchFields = useMemo(() => [
@@ -77,7 +87,8 @@ export default function StatusPage() {
       render: (r) => `${r.quantity} ${r.unit}` },
     { key: 'planned',      label: t('wo.period'),       width: 200,
       render: (r) => `${r.planned_start} ~ ${r.planned_end}` },
-    { key: 'assignee',     label: t('wo.assignee'),     width: 90 },
+    { key: 'assignee',     label: t('wo.assignee'),     width: 90,
+      render: (r) => empMap[r.assignee] ?? r.assignee ?? '-' },
     ...(actions.add || actions.edit || actions.delete ? [{
       key: 'actions', label: '', width: 96,
       render: (r) => (
@@ -103,7 +114,7 @@ export default function StatusPage() {
         </div>
       ),
     }] : []),
-  ], [t, actions])
+  ], [t, actions, empMap])
 
   // ── 조회 ──────────────────────────────────────────────
   const handleSearch = useCallback(async (f = filters) => {
@@ -122,7 +133,15 @@ export default function StatusPage() {
     finally  { setLoading(false) }
   }, [filters])
 
-  useEffect(() => { handleSearch(initFilters) }, [])
+  // 최초 진입: 데이터 있는 최신월로 기본 조회(월 이월 — 대시보드와 통일) - 2026-09-01
+  useEffect(() => {
+    (async () => {
+      const dateRange = await probeMonthRange(API, 'planned_start')
+      const f = { ...initFilters, dateRange }
+      setFilters(f)
+      handleSearch(f)
+    })()
+  }, [])
 
   const handleFilterChange = (key, value) => setFilters(prev => ({ ...prev, [key]: value }))
 

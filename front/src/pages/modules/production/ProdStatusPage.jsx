@@ -10,6 +10,7 @@ import Table     from '../../../components/containers/Table'
 import Modal     from '../../../components/containers/Modal'
 import { Field, Input, Select, Textarea, PageTitle } from '../../../components/common/FormControls'
 import Badge     from '../../../components/common/Badge'
+import { probeMonthRange } from '../../../utils/effectiveMonth'
 import { API_BASE } from '../../../constants/api'
 
 const API        = `${API_BASE}/api/productions`
@@ -113,7 +114,15 @@ export default function StatusPage() {
     finally  { setLoading(false) }
   }, [filters])
 
-  useEffect(() => { handleSearch(initFilters) }, [])
+  // 최초 진입: 데이터 있는 최신월로 기본 조회(월 이월 — 대시보드와 통일) - 2026-09-01
+  useEffect(() => {
+    (async () => {
+      const dateRange = await probeMonthRange(API, 'work_date')
+      const f = { ...initFilters, dateRange }
+      setFilters(f)
+      handleSearch(f)
+    })()
+  }, [])
 
   const openCreate = () => {
     setForm({ ...initForm, work_date: fmtDate(new Date()) })

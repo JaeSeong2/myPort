@@ -11,6 +11,7 @@ import Table     from '../../../components/containers/Table'
 import Modal     from '../../../components/containers/Modal'
 import { Field, Input, Select, Textarea, ItemSelect, PageTitle } from '../../../components/common/FormControls'
 import Badge     from '../../../components/common/Badge'
+import { probeMonthRange } from '../../../utils/effectiveMonth'
 import { API_BASE } from '../../../constants/api'
 
 const INV_API   = `${API_BASE}/api/inventory`
@@ -122,8 +123,14 @@ export default function StatusPage() {
 
   const handleTabChange = (key) => {
     setTab(key)
-    if (key === 'stock') loadStock(initStockFilters)
-    else                 loadTxns(initTxnFilters)
+    if (key === 'stock') { loadStock(initStockFilters); return }
+    // 입출고 이력: 데이터 있는 최신월로 기본 조회(월 이월) - 2026-09-01
+    (async () => {
+      const dateRange = await probeMonthRange(`${INV_API}/txns`, 'txn_date')
+      const f = { ...initTxnFilters, dateRange }
+      setTxnFilters(f)
+      loadTxns(f)
+    })()
   }
 
   const handleSearch = () => {

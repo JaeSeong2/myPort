@@ -42,6 +42,27 @@ export default {
   'wo.note': 'Note',               'wo.unit': 'Unit',
   'wo.create.title': 'Create Work Order', 'wo.edit.title': 'Edit Work Order',
 
+  // Work Assignment (dispatch board)
+  'wa.title': 'Work Assignment',
+  'wa.unassigned': 'Unassigned',
+  'wa.process': 'Process',
+  'wa.refresh': 'Refresh',
+  'wa.count': '',
+  'wa.qtySum': 'Total Qty',
+  'wa.hintDrag': 'Drag a pending order onto a worker, or tap a card then click a column to assign.',
+  'wa.moveHere': 'Assign here',
+  'wa.locked': 'In progress (locked)',
+  'wa.pendingTotal': 'Unassigned',
+  'wa.assignedTotal': 'Assigned',
+  'wa.saving': 'Saving assignment…',
+  'wa.saved': 'Assignment saved',
+  'wa.saveFail': 'Failed — reverting',
+  'wa.noWorkers': 'No active workers (register in Master Data).',
+  'wa.readOnly': 'View only — no assignment permission.',
+  'wa.capacity': 'Capacity',
+  'wa.over': 'over',
+  'wa.util': 'Load',
+
   // Options
   'opt.all': 'All',
   'opt.status.PENDING': 'Pending', 'opt.status.IN_PROG': 'In Progress',

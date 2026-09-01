@@ -31,3 +31,27 @@ export function effectiveMonthRange(records, dateField) {
     month: m,
   }
 }
+
+// 현재월 [start,end] (폴백 실패 시 사용) - 2026-09-01
+function currentMonthRange() {
+  const now = new Date()
+  return [fmt(new Date(now.getFullYear(), now.getMonth(), 1)),
+          fmt(new Date(now.getFullYear(), now.getMonth() + 1, 0))]
+}
+
+/**
+ * 조회 API를 날짜필터 없이 probe해 데이터 있는 최신월 범위를 구함 - 2026-09-01
+ * 조회성 화면 최초 진입 시 기본 dateRange를 대시보드처럼 최신 데이터월로 맞추는 용도.
+ * @param {string} url       날짜필터 없이 호출할 목록 API (예: `${API}` )
+ * @param {string} dateField 레코드의 날짜 필드명 (예: 'work_date')
+ * @returns {Promise<[string,string]>} [start, end] (YYYY-MM-DD)
+ */
+export async function probeMonthRange(url, dateField) {
+  try {
+    const json = await fetch(url).then((r) => r.json())
+    const { start, end } = effectiveMonthRange(json.data ?? [], dateField)
+    return [start, end]
+  } catch {
+    return currentMonthRange()
+  }
+}

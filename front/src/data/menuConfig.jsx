@@ -25,7 +25,7 @@ export const menuConfig = [
     icon: ClipboardList,
     children: [
       { id: 'wo-status',  labelKey: 'menu.wo.status',  label: '작업지시 현황', path: '/main/wo7q' },
-      { id: 'wo-assign',  labelKey: 'menu.wo.assign',  label: '작업 배정',     path: '/main/wa2n',  wip: true },
+      { id: 'wo-assign',  labelKey: 'menu.wo.assign',  label: '작업 배정',     path: '/main/wa2n' },
       { id: 'wo-history', labelKey: 'menu.wo.history', label: '작업 이력',     path: '/main/wh5c', wip: true },
     ],
   },

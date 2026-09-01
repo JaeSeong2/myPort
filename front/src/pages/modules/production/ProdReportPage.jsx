@@ -6,6 +6,7 @@ import {
 } from 'recharts'
 import Table from '../../../components/containers/Table'
 import { PageTitle } from '../../../components/common/FormControls'
+import { effectiveMonthRange } from '../../../utils/effectiveMonth'
 import { API_BASE } from '../../../constants/api'
 
 const API = `${API_BASE}/api/productions`
@@ -47,6 +48,18 @@ export default function ReportPage() {
   }, [year, month])
 
   useEffect(() => { loadData() }, [loadData])
+
+  // 최초 진입: 데이터 있는 최신월로 기본 년/월 지정(월 이월 — 대시보드와 통일) - 2026-09-01
+  useEffect(() => {
+    (async () => {
+      try {
+        const json = await fetch(API).then((r) => r.json())
+        const { year: y, month: m } = effectiveMonthRange(json.data ?? [], 'work_date')
+        setYear(y)
+        setMonth(m + 1)  // effectiveMonthRange의 month는 0-based
+      } catch { /* 현재월 유지 */ }
+    })()
+  }, [])
 
   // ── Summary ──────────────────────────────────────────────
   const summary = useMemo(() => {

@@ -36,6 +36,27 @@ export default {
   'wo.note': '비고',               'wo.unit': '단위',
   'wo.create.title': '작업지시 등록', 'wo.edit.title': '작업지시 수정',
 
+  // 작업 배정(디스패치 보드)
+  'wa.title': '작업 배정',
+  'wa.unassigned': '미배정',
+  'wa.process': '공정',
+  'wa.refresh': '새로고침',
+  'wa.count': '건',
+  'wa.qtySum': '총수량',
+  'wa.hintDrag': '대기 작업지시를 작업자에게 끌어다 놓거나, 카드를 눌러 선택 후 대상 컬럼을 클릭해 배정합니다.',
+  'wa.moveHere': '여기로 배정',
+  'wa.locked': '진행중(배정 잠금)',
+  'wa.pendingTotal': '미배정',
+  'wa.assignedTotal': '배정완료',
+  'wa.saving': '배정 저장 중…',
+  'wa.saved': '배정 완료',
+  'wa.saveFail': '배정 실패 — 되돌립니다',
+  'wa.noWorkers': '활성 작업자가 없습니다(기초정보에서 등록).',
+  'wa.readOnly': '배정 권한이 없어 보기 전용입니다.',
+  'wa.capacity': '부하상한',
+  'wa.over': '초과',
+  'wa.util': '부하율',
+
   // 선택값
   'opt.all': '전체',
   'opt.status.PENDING': '대기', 'opt.status.IN_PROG': '진행',
